@@ -40,6 +40,7 @@
 <script setup lang="ts">
   import { HomeFilled, OfficeBuilding } from '@element-plus/icons-vue'
   import { ref, watch, shallowRef, onMounted } from 'vue'
+  import IconTask from '@/components/icons/IconTask.vue'
 
   import { useRoute, useRouter } from 'vue-router'
 
@@ -61,6 +62,12 @@
       name: '部门管理',
       routerName: 'department',
       icon: shallowRef(OfficeBuilding),
+    },
+
+    {
+      name: '任务管理',
+      routerName: 'task',
+      icon: shallowRef(IconTask),
     },
   ])
   const navTo = (name: string) => {
