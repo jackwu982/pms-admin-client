@@ -21,7 +21,9 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      // 已在 main.ts 中全量引入 element-plus/dist/index.css，
+      // 关闭按需样式引入，避免 base.css 被拆成独立 chunk 并在 reset.css 之后加载，覆盖自定义主题变量
+      resolvers: [ElementPlusResolver({ importStyle: false })],
     }),
   ],
   resolve: {
