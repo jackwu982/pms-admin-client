@@ -8,7 +8,11 @@
     :before-close="handleClose">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
       <el-form-item label="工序名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入工序名称" />
+        <el-input
+          v-model="form.name"
+          placeholder="请输入工序名称"
+          :maxlength="30"
+          show-word-limit />
       </el-form-item>
 
       <div class="flex gap-3">
