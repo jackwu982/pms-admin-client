@@ -41,6 +41,9 @@
   import { HomeFilled, OfficeBuilding } from '@element-plus/icons-vue'
   import { ref, watch, shallowRef, onMounted } from 'vue'
   import IconTask from '@/components/icons/IconTask.vue'
+  import IconUser from '@/components/icons/IconUser.vue'
+  import IconModel from '@/components/icons/IconModel.vue'
+  import IconStatistics from '@/components/icons/IconStatistics.vue'
 
   import { useRoute, useRouter } from 'vue-router'
 
@@ -68,6 +71,34 @@
       name: '任务管理',
       routerName: 'task',
       icon: shallowRef(IconTask),
+    },
+
+    {
+      name: '员工管理',
+      routerName: 'user',
+      icon: shallowRef(IconUser),
+    },
+
+    {
+      name: '工序管理',
+      routerName: 'process',
+      icon: shallowRef(IconModel),
+      children: [
+        {
+          name: '分类',
+          routerName: 'process-category',
+        },
+        {
+          name: '标准工序',
+          routerName: 'process-standard',
+        },
+      ],
+    },
+
+    {
+      name: '工时统计',
+      routerName: 'statistics',
+      icon: shallowRef(IconStatistics),
     },
   ])
   const navTo = (name: string) => {

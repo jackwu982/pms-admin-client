@@ -19,7 +19,7 @@
                 v-model="params.name"
                 placeholder="请输入任务名称"
                 clearable
-                class="w-44!" />
+                class="w-50!" />
             </el-form-item>
           </template>
         </BaseSearchForm>

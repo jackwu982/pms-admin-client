@@ -12,7 +12,7 @@
                 v-model="params.name"
                 placeholder="请输入部门名称"
                 clearable
-                class="w-60!" />
+                class="w-50!" />
             </el-form-item>
           </template>
         </BaseSearchForm>

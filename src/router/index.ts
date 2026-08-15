@@ -27,6 +27,30 @@ const router = createRouter({
           name: 'task',
           component: () => import('@/views/TaskView.vue'),
         },
+
+        {
+          path: 'user',
+          name: 'user',
+          component: () => import('@/views/UserView.vue'),
+        },
+
+        {
+          path: 'process-category',
+          name: 'process-category',
+          component: () => import('@/views/process/CategoryView.vue'),
+        },
+
+        {
+          path: 'process-standard',
+          name: 'process-standard',
+          component: () => import('@/views/process/StandardProcessView.vue'),
+        },
+
+        {
+          path: 'statistics',
+          name: 'statistics',
+          component: () => import('@/views/StatisticsView.vue'),
+        },
       ],
     },
     {

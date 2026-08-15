@@ -14,6 +14,7 @@ declare module 'vue' {
     BasePagination: typeof import('./src/components/base/BasePagination.vue')['default']
     BaseSearchForm: typeof import('./src/components/base/BaseSearchForm.vue')['default']
     BaseTableContainer: typeof import('./src/components/base/BaseTableContainer.vue')['default']
+    CategoryDialog: typeof import('./src/components/process/CategoryDialog.vue')['default']
     DepartmentDialog: typeof import('./src/components/department/DepartmentDialog.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
@@ -38,6 +39,8 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTabPane: typeof import('element-plus/es')['ElTabPane']
+    ElTabs: typeof import('element-plus/es')['ElTabs']
     IconChannel: typeof import('./src/components/icons/IconChannel.vue')['default']
     IconCode: typeof import('./src/components/icons/IconCode.vue')['default']
     IconConfig: typeof import('./src/components/icons/IconConfig.vue')['default']
@@ -55,7 +58,9 @@ declare module 'vue' {
     ProcessTable: typeof import('./src/components/task/ProcessTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StandardProcessDialog: typeof import('./src/components/process/StandardProcessDialog.vue')['default']
     TaskDialog: typeof import('./src/components/task/TaskDialog.vue')['default']
+    UserDialog: typeof import('./src/components/user/UserDialog.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
