@@ -1,0 +1,11 @@
+<template>
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full">
+    <rect x="4" y="20" width="24" height="24" rx="4" fill="white" fill-opacity="0.25" />
+    <rect x="36" y="12" width="24" height="32" rx="4" fill="white" fill-opacity="0.35" />
+    <rect x="12" y="8" width="8" height="8" rx="2" fill="white" fill-opacity="0.2" />
+    <rect x="24" y="28" width="4" height="12" rx="2" fill="white" fill-opacity="0.3" />
+    <rect x="44" y="18" width="8" height="4" rx="2" fill="white" fill-opacity="0.2" />
+    <rect x="44" y="26" width="8" height="4" rx="2" fill="white" fill-opacity="0.2" />
+    <rect x="44" y="34" width="8" height="4" rx="2" fill="white" fill-opacity="0.2" />
+  </svg>
+</template>

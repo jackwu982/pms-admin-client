@@ -14,10 +14,12 @@ declare module 'vue' {
     BasePagination: typeof import('./src/components/base/BasePagination.vue')['default']
     BaseSearchForm: typeof import('./src/components/base/BaseSearchForm.vue')['default']
     BaseTableContainer: typeof import('./src/components/base/BaseTableContainer.vue')['default']
+    DepartmentDialog: typeof import('./src/components/department/DepartmentDialog.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElConfigProvider: typeof import('element-plus/es')['ElConfigProvider']
     ElContainer: typeof import('element-plus/es')['ElContainer']
+    ElDialog: typeof import('element-plus/es')['ElDialog']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElIcon: typeof import('element-plus/es')['ElIcon']
@@ -25,7 +27,10 @@ declare module 'vue' {
     ElMain: typeof import('element-plus/es')['ElMain']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
+    ElPagination: typeof import('element-plus/es')['ElPagination']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
+    ElTable: typeof import('element-plus/es')['ElTable']
+    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     IconChannel: typeof import('./src/components/icons/IconChannel.vue')['default']
     IconCode: typeof import('./src/components/icons/IconCode.vue')['default']
     IconConfig: typeof import('./src/components/icons/IconConfig.vue')['default']
@@ -37,7 +42,11 @@ declare module 'vue' {
     IconStatistics: typeof import('./src/components/icons/IconStatistics.vue')['default']
     IconTask: typeof import('./src/components/icons/IconTask.vue')['default']
     IconUser: typeof import('./src/components/icons/IconUser.vue')['default']
+    IconWelcome: typeof import('./src/components/icons/IconWelcome.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+  }
+  export interface GlobalDirectives {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

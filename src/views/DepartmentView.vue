@@ -1,6 +1,9 @@
 <template>
   <div>
     <BaseTableContainer>
+      <template #header-right-content>
+        <el-button type="primary" @click="handleCreate">新增部门</el-button>
+      </template>
       <template #filter-content>
         <BaseSearchForm @search="onSearch" @reset="onReset">
           <template #default>
@@ -23,7 +26,7 @@
           <el-table-column label="更新时间" width="180">
             <template #default="{ row }"> {{ dayjsFormat(row.updateTime) }} </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" min-width="60">
+          <el-table-column label="操作" fixed="right" width="120">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="handleEdit(row)">
                 编辑
@@ -40,6 +43,12 @@
           @current-change="loadDepartments" />
       </template>
     </BaseTableContainer>
+
+    <DepartmentDialog
+      v-if="showEditDialog"
+      :department="department"
+      @saved="handleSaved"
+      @closed="toggleDialog" />
   </div>
 </template>
 
@@ -50,6 +59,7 @@
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
   import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
   import BasePagination from '@/components/base/BasePagination.vue'
+  import DepartmentDialog from '@/components/department/DepartmentDialog.vue'
 
   import type { Department } from '@/types/departmentType'
   import { departmentApi } from '@/api/department'
@@ -102,25 +112,32 @@
     onSearch()
   }
 
-  // edit dialog
+  // edit / create dialog
   const showEditDialog = ref(false)
-  const department = ref<any>({})
+  const department = ref<Department | undefined>()
+  const toggleDialog = () => {
+    showEditDialog.value = !showEditDialog.value
+  }
+
+  const handleCreate = () => {
+    department.value = undefined
+    toggleDialog()
+  }
 
   const handleEdit = (item: any) => {
     department.value = item
-    toggleEditDialog()
-  }
-
-  const toggleEditDialog = () => {
-    showEditDialog.value = !showEditDialog.value
+    toggleDialog()
   }
 
   const handleSaved = (item: Department) => {
     const index = departments.value.findIndex((c) => c.id === item.id)
     if (index !== -1) {
       departments.value.splice(index, 1, item)
+    } else {
+      departments.value.unshift(item)
     }
-    toggleEditDialog()
+
+    toggleDialog()
   }
 </script>
 
