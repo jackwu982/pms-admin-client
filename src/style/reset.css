@@ -1,0 +1,62 @@
+:root {
+  /* Brand color: replace Element Plus blue with Apple Action Blue */
+  --el-color-primary: #0066cc;
+  --el-color-primary-light-3: #0071e3;
+  --el-color-primary-light-5: #3399dd;
+  --el-color-primary-light-7: #99ccee;
+  --el-color-primary-light-8: #cce5f7;
+  --el-color-primary-light-9: #e6f2fa;
+  --el-color-primary-dark-2: #0055aa;
+
+  /* Text colors */
+  --el-text-color-primary: #1d1d1f;
+  --el-text-color-regular: #1d1d1f;
+  --el-text-color-secondary: #7a7a7a;
+  --el-text-color-placeholder: #7a7a7a;
+  --el-text-color-disabled: #cccccc;
+
+  /* Background colors */
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f5f5f7;
+  --el-bg-color-overlay: #ffffff;
+
+  /* Border */
+  --el-border-color: #e0e0e0;
+  --el-border-color-light: #e0e0e0;
+  --el-border-color-lighter: #f0f0f0;
+  --el-border-color-hover: #0066cc;
+  --el-border-color-dark: #cccccc;
+
+  /* Disabled */
+  --el-disabled-bg-color: #f5f5f7;
+  --el-disabled-text-color: #cccccc;
+  --el-disabled-border-color: #e0e0e0;
+  --el-fill-color: #f5f5f7;
+  --el-fill-color-light: #fafafc;
+  --el-fill-color-blank: #ffffff;
+}
+
+:root .el-dialog {
+  padding: 0;
+}
+
+:root .el-card__body {
+  padding: 16px;
+}
+
+:root .el-table {
+  --el-table-header-bg-color: var(--el-bg-color-page);
+}
+.el-dialog__body {
+  padding: 24px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.el-dialog__header {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.el-dialog__footer {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+}

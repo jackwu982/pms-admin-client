@@ -23,4 +23,10 @@ export default defineConfigWithVueTs(
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
 
   skipFormatting,
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 )
