@@ -9,4 +9,7 @@ export interface TimeEntry {
   processId?: number
   processName?: string
   hours: number
+  remark?: string
+  date?: string
+  createTime?: string
 }

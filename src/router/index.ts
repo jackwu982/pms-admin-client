@@ -51,6 +51,18 @@ const router = createRouter({
           name: 'statistics',
           component: () => import('@/views/StatisticsView.vue'),
         },
+
+        {
+          path: 'report-hours',
+          name: 'report-hours',
+          component: () => import('@/views/report/WorkHoursReportView.vue'),
+        },
+
+        {
+          path: 'report-standard',
+          name: 'report-standard',
+          component: () => import('@/views/report/StandardProcessReportView.vue'),
+        },
       ],
     },
     {

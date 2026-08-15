@@ -4,27 +4,17 @@
     <el-card shadow="never" class="mb-6">
       <div class="flex flex-wrap items-end gap-4">
         <div>
-          <span class="mb-1.5 block text-xs text-gray-400">时间范围</span>
-          <el-select v-model="timeRange" class="w-32!" @change="onTimeRangeChange">
-            <el-option
-              v-for="o in timeRangeOptions"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value" />
-          </el-select>
-        </div>
-        <div>
           <span class="mb-1.5 block text-xs text-gray-400">日期范围</span>
           <el-date-picker
             v-model="dateRange"
             type="daterange"
             value-format="YYYY-MM-DD"
+            :shortcuts="DATE_SHORTCUTS"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             class="w-60!"
             @change="onDateChange" />
         </div>
-        <el-button @click="clearFilter">清除</el-button>
       </div>
     </el-card>
 
@@ -300,66 +290,19 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue'
-  import dayjs from 'dayjs'
 
   import { timeEntryApi } from '@/api/timeEntry'
   import type { TimeEntry } from '@/types/timeEntryType'
+
+  import { DATE_SHORTCUTS } from '@/util/dateShortcuts'
 
   const timeEntries = ref<TimeEntry[]>([])
   const loading = ref(false)
 
   const dateRange = ref<[string, string] | null>(null)
-  const timeRange = ref('thisWeek')
   const activeTab = ref('cross')
   const expandedDept = ref<number | null>(null)
   const expandedTask = ref<number | null>(null)
-
-  const timeRangeOptions = [
-    { label: '自定义', value: '' },
-    { label: '今日', value: 'today' },
-    { label: '昨日', value: 'yesterday' },
-    { label: '本周', value: 'thisWeek' },
-    { label: '上周', value: 'lastWeek' },
-    { label: '本月', value: 'thisMonth' },
-    { label: '上月', value: 'lastMonth' },
-    { label: '近30天', value: 'last30' },
-  ]
-
-  const fmt = (d: any) => dayjs(d).format('YYYY-MM-DD')
-
-  function setRange(option: string): [string, string] | null {
-    const now = dayjs()
-    switch (option) {
-      case 'today':
-        return [fmt(now), fmt(now)]
-      case 'yesterday': {
-        const d = now.subtract(1, 'day')
-        return [fmt(d), fmt(d)]
-      }
-      case 'thisWeek': {
-        const monday = now.day(1).startOf('day')
-        return [fmt(monday), fmt(now)]
-      }
-      case 'lastWeek': {
-        const monday = now.day(1).subtract(7, 'day')
-        const sunday = monday.add(6, 'day')
-        return [fmt(monday), fmt(sunday)]
-      }
-      case 'thisMonth':
-        return [fmt(now.startOf('month')), fmt(now)]
-      case 'lastMonth': {
-        const start = now.subtract(1, 'month').startOf('month')
-        const end = start.endOf('month')
-        return [fmt(start), fmt(end)]
-      }
-      case 'last30': {
-        const s = now.subtract(30, 'day')
-        return [fmt(s), fmt(now)]
-      }
-      default:
-        return null
-    }
-  }
 
   async function fetchEntries() {
     loading.value = true
@@ -375,23 +318,15 @@
     }
   }
 
-  function onTimeRangeChange() {
-    dateRange.value = setRange(timeRange.value)
-    if (timeRange.value) fetchEntries()
-  }
-
   function onDateChange() {
-    timeRange.value = ''
     fetchEntries()
   }
 
-  function clearFilter() {
-    dateRange.value = null
-    timeRange.value = ''
+  onMounted(() => {
+    const thisWeek = DATE_SHORTCUTS.find((s) => s.text === '本周')
+    dateRange.value = thisWeek ? thisWeek.value() : null
     fetchEntries()
-  }
-
-  onMounted(onTimeRangeChange)
+  })
 
   function toggleDept(deptId: number) {
     expandedDept.value = expandedDept.value === deptId ? null : deptId

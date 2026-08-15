@@ -60,7 +60,6 @@
           <el-table-column label="操作" fixed="right" width="120">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
-              <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -84,7 +83,6 @@
 
 <script setup lang="ts">
   import { onMounted, ref } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
   import { useDayjs } from '@/util/dayjs'
 
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
@@ -185,26 +183,6 @@
   const handleSaved = () => {
     showDialog.value = false
     loadProcesses()
-  }
-
-  const handleDelete = async (process: any) => {
-    try {
-      await ElMessageBox.confirm(`确定要删除工序「${process.name}」吗？`, '删除确认', {
-        confirmButtonText: '删除',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-    } catch {
-      return
-    }
-
-    try {
-      await standardProcessApi.delete(String(process.id))
-      ElMessage.success('删除成功')
-      loadProcesses()
-    } catch {
-      // error toast already shown by the shared axios interceptor
-    }
   }
 </script>
 

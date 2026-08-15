@@ -44,6 +44,7 @@
   import IconUser from '@/components/icons/IconUser.vue'
   import IconModel from '@/components/icons/IconModel.vue'
   import IconStatistics from '@/components/icons/IconStatistics.vue'
+  import IconOrder from '@/components/icons/IconOrder.vue'
 
   import { useRoute, useRouter } from 'vue-router'
 
@@ -99,6 +100,22 @@
       name: '工时统计',
       routerName: 'statistics',
       icon: shallowRef(IconStatistics),
+    },
+
+    {
+      name: '上报记录',
+      routerName: 'report',
+      icon: shallowRef(IconOrder),
+      children: [
+        {
+          name: '工时上报',
+          routerName: 'report-hours',
+        },
+        {
+          name: '标准工序上报',
+          routerName: 'report-standard',
+        },
+      ],
     },
   ])
   const navTo = (name: string) => {
