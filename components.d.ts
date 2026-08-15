@@ -55,7 +55,6 @@ declare module 'vue' {
     IconTask: typeof import('./src/components/icons/IconTask.vue')['default']
     IconUser: typeof import('./src/components/icons/IconUser.vue')['default']
     IconWelcome: typeof import('./src/components/icons/IconWelcome.vue')['default']
-    ProcessCard: typeof import('./src/components/task/ProcessCard.vue')['default']
     ProcessDialog: typeof import('./src/components/task/ProcessDialog.vue')['default']
     ProcessTable: typeof import('./src/components/task/ProcessTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

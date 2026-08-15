@@ -86,7 +86,12 @@ router.beforeEach((to, from) => {
   const allowVisit = whiteListRouteNames.includes(to.name as string)
   const user: Record<string, any> = localStore.get('user')
 
-  // TODO permissions check admin
+  const permissions = localStore.get('permissions', [])
+
+  if (user?.id && !permissions.includes('admin')) {
+    ElMessage.warning({ message: '您无权访问' })
+    return false
+  }
 
   if (user?.id || allowVisit) {
     return true

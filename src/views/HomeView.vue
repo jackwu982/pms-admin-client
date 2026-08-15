@@ -11,11 +11,20 @@
           background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
         "></div>
 
+      <div class="absolute top-6 right-6 z-2">
+        <el-button
+          text
+          class="text-white/70 transition-colors hover:text-white"
+          @click="handleLogout">
+          退出登录
+        </el-button>
+      </div>
+
       <div class="relative z-1">
         <el-icon :size="64" class="mt-6"><IconWelcome /></el-icon>
         <h1 class="mb-3 text-[32px] font-bold tracking-[-0.5px] text-white">{{ greeting }}</h1>
         <p class="mb-1.5 text-base text-white/70">欢迎使用PMS平台</p>
-        <p class="text-sm text-white/45">高效管理 项目</p>
+        <p class="text-sm text-white/45">项目任务、标准工序、工时上报与统计一体化管理平台</p>
       </div>
     </div>
 
@@ -48,13 +57,17 @@
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { localStore } from '@/composables/store'
-  import { ArrowRight, User } from '@element-plus/icons-vue'
+  import { ArrowRight, OfficeBuilding, User } from '@element-plus/icons-vue'
   import IconWelcome from '@/components/icons/IconWelcome.vue'
+  import IconTask from '@/components/icons/IconTask.vue'
+  import IconModel from '@/components/icons/IconModel.vue'
+  import IconStatistics from '@/components/icons/IconStatistics.vue'
+  import IconOrder from '@/components/icons/IconOrder.vue'
 
   const router = useRouter()
 
   const user = localStore.get('user') || {}
-  const username = user.name || user.username || ''
+  const username = user.nickname || user.username || ''
 
   const greeting = computed(() => {
     const hour = new Date().getHours()
@@ -70,9 +83,48 @@
       icon: User,
       route: '/user',
     },
+    {
+      label: '部门管理',
+      desc: '管理部门组织架构',
+      color: 'linear-gradient(135deg, #667eea, #764ba2)',
+      icon: OfficeBuilding,
+      route: '/department',
+    },
+    {
+      label: '任务管理',
+      desc: '管理项目任务与工序',
+      color: 'linear-gradient(135deg, #11998e, #38ef7d)',
+      icon: IconTask,
+      route: '/task',
+    },
+    {
+      label: '工序管理',
+      desc: '管理分类与标准工序',
+      color: 'linear-gradient(135deg, #fc4a1a, #f7b733)',
+      icon: IconModel,
+      route: '/process-category',
+    },
+    {
+      label: '工时统计',
+      desc: '工时数据多维统计',
+      color: 'linear-gradient(135deg, #36d1dc, #5b86e5)',
+      icon: IconStatistics,
+      route: '/statistics',
+    },
+    {
+      label: '上报记录',
+      desc: '查看员工上报记录',
+      color: 'linear-gradient(135deg, #c471f5, #fa71cd)',
+      icon: IconOrder,
+      route: '/report-hours',
+    },
   ]
 
   const navigateTo = (route: string) => {
     router.push(route)
+  }
+
+  const handleLogout = () => {
+    router.push({ name: 'logout' })
   }
 </script>
