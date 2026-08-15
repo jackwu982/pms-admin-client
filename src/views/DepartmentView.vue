@@ -9,8 +9,7 @@
                 v-model="params.name"
                 placeholder="请输入部门名称"
                 clearable
-                class="w-60!"
-              />
+                class="w-60!" />
             </el-form-item>
           </template>
         </BaseSearchForm>
@@ -38,92 +37,91 @@
           v-model:page-num="params.pageNum"
           v-model:page-size="params.pageSize"
           @size-change="loadDepartments"
-          @current-change="loadDepartments"
-        />
+          @current-change="loadDepartments" />
       </template>
     </BaseTableContainer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useDayjs } from '@/util/dayjs'
+  import { onMounted, reactive, ref } from 'vue'
+  import { useDayjs } from '@/util/dayjs'
 
-import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
-import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
-import BasePagination from '@/components/base/BasePagination.vue'
+  import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
+  import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
+  import BasePagination from '@/components/base/BasePagination.vue'
 
-import type { Department } from '@/types/departmentType'
-import { departmentApi } from '@/api/department'
+  import type { Department } from '@/types/departmentType'
+  import { departmentApi } from '@/api/department'
 
-const { dayjsFormat } = useDayjs()
+  const { dayjsFormat } = useDayjs()
 
-interface SearchParams {
-  total: number
-  pageNum: number
-  pageSize: number
-  externalId: number | null
-  externalName: string
-  name: string
-}
-
-const params = reactive<SearchParams>({
-  total: 0,
-  pageNum: 1,
-  pageSize: 10,
-  externalId: null,
-  externalName: '',
-  name: '',
-})
-
-onMounted(() => {
-  loadDepartments()
-})
-
-const departments = ref<Department[]>([])
-const loading = ref(false)
-const loadDepartments = () => {
-  loading.value = true
-  departmentApi
-    .list(params)
-    .then((res) => {
-      const { list, total } = res.data || {}
-      params.total = total
-      departments.value = list
-    })
-    .finally(() => {
-      loading.value = false
-    })
-}
-
-const onSearch = () => {
-  params.pageNum = 1
-  loadDepartments()
-}
-const onReset = () => {
-  onSearch()
-}
-
-// edit dialog
-const showEditDialog = ref(false)
-const department = ref<any>({})
-
-const handleEdit = (item: any) => {
-  department.value = item
-  toggleEditDialog()
-}
-
-const toggleEditDialog = () => {
-  showEditDialog.value = !showEditDialog.value
-}
-
-const handleSaved = (item: Department) => {
-  const index = departments.value.findIndex((c) => c.id === item.id)
-  if (index !== -1) {
-    departments.value.splice(index, 1, item)
+  interface SearchParams {
+    total: number
+    pageNum: number
+    pageSize: number
+    externalId: number | null
+    externalName: string
+    name: string
   }
-  toggleEditDialog()
-}
+
+  const params = reactive<SearchParams>({
+    total: 0,
+    pageNum: 1,
+    pageSize: 10,
+    externalId: null,
+    externalName: '',
+    name: '',
+  })
+
+  onMounted(() => {
+    loadDepartments()
+  })
+
+  const departments = ref<Department[]>([])
+  const loading = ref(false)
+  const loadDepartments = () => {
+    loading.value = true
+    departmentApi
+      .list(params)
+      .then((res) => {
+        const { list, total } = res.data || {}
+        params.total = total
+        departments.value = list
+      })
+      .finally(() => {
+        loading.value = false
+      })
+  }
+
+  const onSearch = () => {
+    params.pageNum = 1
+    loadDepartments()
+  }
+  const onReset = () => {
+    onSearch()
+  }
+
+  // edit dialog
+  const showEditDialog = ref(false)
+  const department = ref<any>({})
+
+  const handleEdit = (item: any) => {
+    department.value = item
+    toggleEditDialog()
+  }
+
+  const toggleEditDialog = () => {
+    showEditDialog.value = !showEditDialog.value
+  }
+
+  const handleSaved = (item: Department) => {
+    const index = departments.value.findIndex((c) => c.id === item.id)
+    if (index !== -1) {
+      departments.value.splice(index, 1, item)
+    }
+    toggleEditDialog()
+  }
 </script>
 
 <style lang="less" scoped></style>

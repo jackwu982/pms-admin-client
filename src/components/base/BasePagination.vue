@@ -9,20 +9,19 @@
       :total="total"
       :hide-on-single-page="hideOnSinglePage"
       @size-change="emits('size-change')"
-      @current-change="emits('current-change')"
-    />
+      @current-change="emits('current-change')" />
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  total: number
-  hideOnSinglePage?: boolean
-}>()
+  defineProps<{
+    total: number
+    hideOnSinglePage?: boolean
+  }>()
 
-const pageNum = defineModel<number>('pageNum', { required: true })
-const pageSize = defineModel<number>('pageSize', { required: true })
-const emits = defineEmits(['size-change', 'current-change'])
+  const pageNum = defineModel<number>('pageNum', { required: true })
+  const pageSize = defineModel<number>('pageSize', { required: true })
+  const emits = defineEmits(['size-change', 'current-change'])
 </script>
 
 <style lang="less" scoped></style>

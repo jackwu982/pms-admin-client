@@ -31,16 +31,16 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, RefreshRight } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+  import { ArrowDown, ArrowUp, RefreshRight } from '@element-plus/icons-vue'
+  import { ref } from 'vue'
 
-defineProps<{
-  labelWidth?: string
-}>()
+  defineProps<{
+    labelWidth?: string
+  }>()
 
-const emits = defineEmits(['search', 'reset'])
+  const emits = defineEmits(['search', 'reset'])
 
-const expanded = ref(false)
+  const expanded = ref(false)
 </script>
 
 <style lang="less" scoped></style>

@@ -11,14 +11,14 @@
 </template>
 
 <script setup lang="ts">
-import IconNotFound from '@/components/icons/IconNotFound.vue'
-import { useRouter } from 'vue-router'
+  import IconNotFound from '@/components/icons/IconNotFound.vue'
+  import { useRouter } from 'vue-router'
 
-const router = useRouter()
+  const router = useRouter()
 
-const goDashboard = () => {
-  router.push({ name: 'homepage' })
-}
+  const goDashboard = () => {
+    router.push({ name: 'homepage' })
+  }
 </script>
 
 <style lang="less" scoped></style>
