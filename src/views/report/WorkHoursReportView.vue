@@ -59,6 +59,12 @@
           <el-table-column label="工时" width="90">
             <template #default="{ row }">{{ row.hours }}h</template>
           </el-table-column>
+          <el-table-column prop="quantity" label="件数" width="90">
+            <template #default="{ row }">
+              <el-tag type="info">{{ row.quantity }} </el-tag>
+            </template>
+          </el-table-column>
+
           <el-table-column label="备注" min-width="160" show-overflow-tooltip>
             <template #default="{ row }">{{ row.remark || '-' }}</template>
           </el-table-column>

@@ -28,8 +28,8 @@
           <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <el-card shadow="never">
               <div class="mb-1 text-xs text-gray-500">总工时</div>
-              <div class="text-2xl font-bold text-[var(--el-color-primary)]">
-                {{ totalHours.toFixed(2) }}h
+              <div class="text-2xl font-bold text-(--el-color-primary)">
+                {{ totalHours.toFixed(3) }}h
               </div>
             </el-card>
             <el-card shadow="never">
@@ -55,8 +55,8 @@
                 <el-table-column label="任务" min-width="160">
                   <template #default="{ row }">{{ row.taskName }}</template>
                 </el-table-column>
-                <el-table-column label="工时" width="120" align="right">
-                  <template #default="{ row }">{{ row.hours.toFixed(2) }}h</template>
+                <el-table-column label="工时" width="120" :align="'right'">
+                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
                 </el-table-column>
               </el-table>
             </el-tab-pane>
@@ -70,24 +70,24 @@
                         <el-table-column prop="empName" label="员工" min-width="120" />
                         <el-table-column prop="taskName" label="任务" min-width="140" />
                         <el-table-column prop="processName" label="工序" min-width="140" />
-                        <el-table-column label="工时" width="100" align="right">
-                          <template #default="{ row: e }">{{ e.hours.toFixed(2) }}h</template>
+                        <el-table-column label="工时" width="100" :align="'right'">
+                          <template #default="{ row: e }">{{ e.hours.toFixed(3) }}h</template>
                         </el-table-column>
                       </el-table>
                     </div>
                   </template>
                 </el-table-column>
                 <el-table-column prop="name" label="部门" min-width="120" />
-                <el-table-column prop="empCount" label="人数" width="80" align="right" />
-                <el-table-column label="总工时" width="120" align="right">
-                  <template #default="{ row }">{{ row.hours.toFixed(2) }}h</template>
+                <el-table-column prop="empCount" label="人数" width="80" :align="'right'" />
+                <el-table-column label="总工时" width="120" :align="'right'">
+                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
                 </el-table-column>
-                <el-table-column label="占比" width="160" align="right">
+                <el-table-column label="占比" width="160" :align="'right'">
                   <template #default="{ row }">
                     <div class="flex items-center justify-end gap-2">
                       <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
                         <div
-                          class="h-full rounded-full bg-[var(--el-color-primary)]"
+                          class="h-full rounded-full bg-(--el-color-primary)"
                           :style="{ width: row.percent + '%' }"></div>
                       </div>
                       <span class="w-10 text-right text-xs text-gray-500">{{ row.percent }}%</span>
@@ -101,15 +101,15 @@
               <el-table :data="employeeStats" row-key="id">
                 <el-table-column prop="name" label="员工" min-width="120" />
                 <el-table-column prop="deptName" label="部门" min-width="120" />
-                <el-table-column label="总工时" width="120" align="right">
-                  <template #default="{ row }">{{ row.hours.toFixed(2) }}h</template>
+                <el-table-column label="总工时" width="120" :align="'right'">
+                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
                 </el-table-column>
-                <el-table-column label="占比" width="160" align="right">
+                <el-table-column label="占比" width="160" :align="'right'">
                   <template #default="{ row }">
                     <div class="flex items-center justify-end gap-2">
                       <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
                         <div
-                          class="h-full rounded-full bg-[var(--el-color-primary)]"
+                          class="h-full rounded-full bg-(--el-color-primary)"
                           :style="{ width: row.percent + '%' }"></div>
                       </div>
                       <span class="w-10 text-right text-xs text-gray-500">{{ row.percent }}%</span>
@@ -126,16 +126,16 @@
                     <div class="px-6 py-2">
                       <el-table :data="taskDetail[row.id] || []" size="small">
                         <el-table-column prop="name" label="工序" min-width="160" />
-                        <el-table-column label="实际工时" width="120" align="right">
-                          <template #default="{ row: p }">{{ p.actualHours.toFixed(2) }}h</template>
+                        <el-table-column label="实际工时" width="120" :align="'right'">
+                          <template #default="{ row: p }">{{ p.actualHours.toFixed(3) }}h</template>
                         </el-table-column>
                       </el-table>
                     </div>
                   </template>
                 </el-table-column>
                 <el-table-column prop="name" label="任务" min-width="160" />
-                <el-table-column label="实际工时" width="120" align="right">
-                  <template #default="{ row }">{{ row.hours.toFixed(2) }}h</template>
+                <el-table-column label="实际工时" width="120" :align="'right'">
+                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
                 </el-table-column>
               </el-table>
             </el-tab-pane>

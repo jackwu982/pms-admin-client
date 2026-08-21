@@ -89,8 +89,8 @@
           <el-input-number
             v-model="form.standardHours"
             :min="0"
-            :precision="2"
-            :step="0.01"
+            :precision="3"
+            :step="0.001"
             controls-position="right"
             class="w-24!" />
         </el-form-item>
