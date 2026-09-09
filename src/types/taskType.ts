@@ -11,6 +11,7 @@ export interface DepartmentRef {
 export interface Process {
   id?: number
   taskId?: number
+  subTaskId?: number
   name: string
   difficulty?: number
   totalHours?: number
@@ -37,6 +38,16 @@ export interface ProcessForm extends Process {
   _managerLoading: boolean
 }
 
+export interface SubTask {
+  id?: number
+  taskId: number
+  name: string
+  published?: boolean
+  managers?: Manager[]
+  startDate?: string | null
+  endDate?: string | null
+}
+
 export interface Task {
   id?: number
   name: string
@@ -45,5 +56,6 @@ export interface Task {
   managers?: Manager[]
   startDate?: string | null
   endDate?: string | null
+  subTasks?: SubTask[]
   processes?: Process[]
 }

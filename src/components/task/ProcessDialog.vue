@@ -7,6 +7,15 @@
     :close-on-click-modal="false"
     :before-close="handleClose">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+      <el-form-item label="所属子任务" prop="subTaskId">
+        <el-select v-model="form.subTaskId" placeholder="请选择子任务" class="w-full">
+          <el-option
+            v-for="subTask in subTasks"
+            :key="subTask.id"
+            :label="subTask.name"
+            :value="subTask.id!" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="工序名称" prop="name">
         <el-input
           v-model="form.name"
@@ -116,10 +125,12 @@
 
   import { processApi } from '@/api/process'
   import { userApi } from '@/api/user'
-  import type { Manager, Process, ProcessForm } from '@/types/taskType'
+  import type { Manager, Process, ProcessForm, SubTask } from '@/types/taskType'
 
   const props = defineProps<{
     taskId: number
+    subTaskId?: number
+    subTasks: SubTask[]
     process?: Process
   }>()
 
@@ -135,6 +146,7 @@
   const formRef = ref<FormInstance>()
   const form = reactive<ProcessForm>({
     id: undefined,
+    subTaskId: props.subTaskId,
     name: '',
     difficulty: 1,
     totalHours: 0,
@@ -150,6 +162,7 @@
   })
 
   const rules: FormRules = {
+    subTaskId: [{ required: true, message: '请选择子任务', trigger: 'change' }],
     name: [{ required: true, message: '请输入工序名称', trigger: 'blur' }],
   }
 
@@ -180,6 +193,7 @@
     }
 
     const payload = {
+      subTaskId: form.subTaskId,
       name: form.name.trim(),
       difficulty: form.difficulty,
       totalHours: form.totalHours,

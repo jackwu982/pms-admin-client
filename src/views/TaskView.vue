@@ -26,14 +26,79 @@
       </template>
 
       <template #content>
-        <el-table v-loading="loading" :data="tasks" row-key="id" class="mt-3">
+        <el-table v-loading="loading" :data="taskRows" row-key="id" class="mt-3">
           <el-table-column type="expand">
             <template #default="{ row }">
-              <ProcessTable :processes="row.processes" @edit="(p) => openEditProcess(row, p)" />
+              <div class="px-6 py-3">
+                <el-table
+                  :data="row.subTasks"
+                  row-key="id"
+                  size="small"
+                  empty-text="暂无子任务，请点击任务右侧的新增子任务">
+                  <el-table-column type="expand">
+                    <template #default="{ row: subTask }">
+                      <ProcessTable
+                        :processes="subTask.processes"
+                        @edit="(p) => openEditProcess(row as Task, p)" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="name" label="子任务名称" min-width="160" />
+                  <el-table-column label="工序数" width="80">
+                    <template #default="{ row: subTask }">{{ subTask.processes.length }}</template>
+                  </el-table-column>
+                  <el-table-column label="负责人" min-width="140">
+                    <template #default="{ row: subTask }">{{
+                      (subTask.managers || []).map((m: Manager) => m.nickname).join('、') || '-'
+                    }}</template>
+                  </el-table-column>
+                  <el-table-column label="起止日期" min-width="220">
+                    <template #default="{ row: subTask }"
+                      >{{ subTask.startDate || '...' }} ~ {{ subTask.endDate || '...' }}</template
+                    >
+                  </el-table-column>
+                  <el-table-column label="状态" width="90">
+                    <template #default="{ row: subTask }">
+                      <span
+                        :class="subTask.published !== false ? 'text-green-600' : 'text-gray-400'"
+                        >{{ subTask.published !== false ? '已上架' : '已下架' }}</span
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" fixed="right" width="160">
+                    <template #default="{ row: subTask }">
+                      <el-button
+                        type="primary"
+                        link
+                        size="small"
+                        @click="openSubTaskDialog(row as Task, subTask as SubTask)"
+                        >编辑</el-button
+                      >
+                      <el-button
+                        type="primary"
+                        link
+                        size="small"
+                        @click="openCreateProcess(row as Task, subTask as SubTask)"
+                        >新增工序</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-if="row.unassignedProcesses.length" class="mt-4">
+                  <div class="text-sm text-gray-500">
+                    未归属子任务的工序（编辑工序可选择所属子任务）
+                  </div>
+                  <ProcessTable
+                    :processes="row.unassignedProcesses"
+                    @edit="(p) => openEditProcess(row as Task, p)" />
+                </div>
+              </div>
             </template>
           </el-table-column>
 
           <el-table-column prop="name" label="任务名称" min-width="160" show-overflow-tooltip />
+          <el-table-column label="子任务数" width="90">
+            <template #default="{ row }">{{ row.subTasks.length }}</template>
+          </el-table-column>
           <el-table-column label="工序数" width="80">
             <template #default="{ row }">{{ row.processes?.length ?? 0 }}</template>
           </el-table-column>
@@ -62,8 +127,8 @@
           <el-table-column label="操作" fixed="right" width="150">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
-              <el-button type="primary" link size="small" @click="openCreateProcess(row)">
-                新增工序
+              <el-button type="primary" link size="small" @click="openSubTaskDialog(row as Task)">
+                新增子任务
               </el-button>
             </template>
           </el-table-column>
@@ -80,9 +145,18 @@
 
     <TaskDialog v-if="showDialog" :task="editingTask" @closed="closeDialog" @saved="handleSaved" />
 
+    <SubTaskDialog
+      v-if="showSubTaskDialog"
+      :task-id="subTaskTaskId"
+      :sub-task="editingSubTask"
+      @closed="showSubTaskDialog = false"
+      @saved="handleSubTaskSaved" />
+
     <ProcessDialog
       v-if="showProcessDialog"
       :task-id="processTaskId"
+      :sub-task-id="processSubTaskId"
+      :sub-tasks="processSubTasks"
       :process="editingProcess"
       @closed="closeProcessDialog"
       @saved="handleProcessSaved" />
@@ -93,14 +167,16 @@
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
   import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
   import BasePagination from '@/components/base/BasePagination.vue'
+  import SubTaskDialog from '@/components/task/SubTaskDialog.vue'
+  import { buildTaskHierarchy } from '@/utils/taskHierarchy'
   import TaskDialog from '@/components/task/TaskDialog.vue'
   import ProcessTable from '@/components/task/ProcessTable.vue'
   import ProcessDialog from '@/components/task/ProcessDialog.vue'
 
   import { taskApi } from '@/api/task'
-  import type { Process, Task } from '@/types/taskType'
+  import type { Manager, Process, SubTask, Task } from '@/types/taskType'
   import { Plus } from '@element-plus/icons-vue'
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
 
   interface SearchParams {
     pageNum: number
@@ -131,6 +207,7 @@
   ]
 
   const tasks = ref<Task[]>([])
+  const taskRows = computed(() => tasks.value.map(buildTaskHierarchy))
   const total = ref(0)
   const loading = ref(false)
 
@@ -186,19 +263,45 @@
     loadTasks()
   }
 
+  const showSubTaskDialog = ref(false)
+  const subTaskTaskId = ref(0)
+  const editingSubTask = ref<SubTask>()
+
+  const openSubTaskDialog = (task: Task, subTask?: SubTask) => {
+    if (task.id == null) return
+    subTaskTaskId.value = task.id
+    editingSubTask.value = subTask
+    showSubTaskDialog.value = true
+  }
+
+  const handleSubTaskSaved = () => {
+    showSubTaskDialog.value = false
+    loadTasks()
+  }
+
   // process dialog
   const showProcessDialog = ref(false)
   const processTaskId = ref<number>(0)
+  const processSubTaskId = ref<number>()
+  const processSubTasks = ref<SubTask[]>([])
   const editingProcess = ref<Process | undefined>()
 
-  const openCreateProcess = (task: any) => {
+  const openCreateProcess = (task: Task, subTask: SubTask) => {
+    if (task.id == null || subTask.id == null) return
     processTaskId.value = task.id
+    processSubTaskId.value = subTask.id
+    processSubTasks.value = task.subTasks ?? []
     editingProcess.value = undefined
     showProcessDialog.value = true
   }
 
-  const openEditProcess = (task: any, process: Process) => {
+  const openEditProcess = (task: Task, process: Process) => {
+    if (task.id == null) return
     processTaskId.value = task.id
+    processSubTasks.value = task.subTasks ?? []
+    processSubTaskId.value = processSubTasks.value.find(
+      (s) => String(s.id) === String(process.subTaskId)
+    )?.id
     editingProcess.value = process
     showProcessDialog.value = true
   }

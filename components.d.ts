@@ -60,6 +60,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StandardProcessDialog: typeof import('./src/components/process/StandardProcessDialog.vue')['default']
+    SubTaskDialog: typeof import('./src/components/task/SubTaskDialog.vue')['default']
     TaskDialog: typeof import('./src/components/task/TaskDialog.vue')['default']
     UserDialog: typeof import('./src/components/user/UserDialog.vue')['default']
   }
