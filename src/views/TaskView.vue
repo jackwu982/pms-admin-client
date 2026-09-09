@@ -52,16 +52,16 @@
                     }}</template>
                   </el-table-column>
                   <el-table-column label="起止日期" min-width="220">
-                    <template #default="{ row: subTask }"
-                      >{{ subTask.startDate || '...' }} ~ {{ subTask.endDate || '...' }}</template
-                    >
+                    <template #default="{ row: subTask }">
+                      {{ subTask.startDate || '...' }} ~ {{ subTask.endDate || '...' }}
+                    </template>
                   </el-table-column>
                   <el-table-column label="状态" width="90">
                     <template #default="{ row: subTask }">
                       <span
-                        :class="subTask.published !== false ? 'text-green-600' : 'text-gray-400'"
-                        >{{ subTask.published !== false ? '已上架' : '已下架' }}</span
-                      >
+                        :class="subTask.published !== false ? 'text-green-600' : 'text-gray-400'">
+                        {{ subTask.published !== false ? '已上架' : '已下架' }}
+                      </span>
                     </template>
                   </el-table-column>
                   <el-table-column label="操作" fixed="right" width="160">
@@ -70,16 +70,16 @@
                         type="primary"
                         link
                         size="small"
-                        @click="openSubTaskDialog(row as Task, subTask as SubTask)"
-                        >编辑</el-button
-                      >
+                        @click="openSubTaskDialog(row as Task, subTask as SubTask)">
+                        编辑
+                      </el-button>
                       <el-button
                         type="primary"
                         link
                         size="small"
-                        @click="openCreateProcess(row as Task, subTask as SubTask)"
-                        >新增工序</el-button
-                      >
+                        @click="openCreateProcess(row as Task, subTask as SubTask)">
+                        新增工序
+                      </el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -124,7 +124,7 @@
               {{ (row.managers || []).map((m: any) => m.nickname).join('、') }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" width="210">
+          <el-table-column label="操作" fixed="right" width="260">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
               <el-button
@@ -135,6 +135,15 @@
                 :disabled="copyingTaskId != null"
                 @click="copyTask(row as Task)"
                 >复制</el-button
+              >
+              <el-button
+                type="danger"
+                link
+                size="small"
+                :loading="deletingTaskId === row.id"
+                :disabled="deletingTaskId != null"
+                @click="deleteTask(row as Task)"
+                >删除</el-button
               >
               <el-button type="primary" link size="small" @click="openSubTaskDialog(row as Task)">
                 新增子任务
@@ -253,6 +262,32 @@
     params.name = ''
     params.published = ''
     onSearch()
+  }
+
+  const deletingTaskId = ref<number>()
+
+  async function deleteTask(task: Task) {
+    if (task.id == null || deletingTaskId.value != null) return
+    try {
+      await ElMessageBox.confirm(
+        `确定删除任务“${task.name}”？删除后将不再显示，已有工时记录会保留。`,
+        '删除任务',
+        {
+          type: 'warning',
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+        }
+      )
+      deletingTaskId.value = task.id
+      await taskApi.delete(task.id)
+      ElMessage.success('任务已删除')
+      if (tasks.value.length === 1 && params.pageNum > 1) params.pageNum -= 1
+      loadTasks()
+    } catch {
+      // Cancellation needs no message; API errors use the shared interceptor.
+    } finally {
+      deletingTaskId.value = undefined
+    }
   }
 
   const copyingTaskId = ref<number>()
