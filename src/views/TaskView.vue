@@ -124,9 +124,18 @@
               {{ (row.managers || []).map((m: any) => m.nickname).join('、') }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" width="150">
+          <el-table-column label="操作" fixed="right" width="210">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
+              <el-button
+                type="primary"
+                link
+                size="small"
+                :loading="copyingTaskId === row.id"
+                :disabled="copyingTaskId != null"
+                @click="copyTask(row as Task)"
+                >复制</el-button
+              >
               <el-button type="primary" link size="small" @click="openSubTaskDialog(row as Task)">
                 新增子任务
               </el-button>
@@ -174,6 +183,7 @@
   import ProcessDialog from '@/components/task/ProcessDialog.vue'
 
   import { taskApi } from '@/api/task'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import type { Manager, Process, SubTask, Task } from '@/types/taskType'
   import { Plus } from '@element-plus/icons-vue'
   import { computed, onMounted, reactive, ref } from 'vue'
@@ -243,6 +253,36 @@
     params.name = ''
     params.published = ''
     onSearch()
+  }
+
+  const copyingTaskId = ref<number>()
+
+  async function copyTask(task: Task) {
+    if (task.id == null || copyingTaskId.value != null) return
+    try {
+      const { value } = await ElMessageBox.prompt(
+        '将复制全部子任务、工序、部门和负责人，并保留上下架状态。',
+        '复制任务',
+        {
+          inputValue: `${task.name.slice(0, 17)}-副本`,
+          inputPlaceholder: '请输入副本名称',
+          inputValidator: (value) =>
+            (!!value?.trim() && value.trim().length <= 20) || '请输入1至20个字符的任务名称',
+          confirmButtonText: '复制',
+          cancelButtonText: '取消',
+          closeOnClickModal: false,
+        }
+      )
+      copyingTaskId.value = task.id
+      await taskApi.copy(task.id, value.trim())
+      ElMessage.success('任务复制成功')
+      params.pageNum = 1
+      loadTasks()
+    } catch {
+      // Cancellation needs no message; API failures are handled by the shared interceptor.
+    } finally {
+      copyingTaskId.value = undefined
+    }
   }
 
   // create / edit dialog
