@@ -8,6 +8,7 @@
       active-text-color="#ffffff">
       <!-- menus  support level 2-->
       <template v-for="item in menus" :key="item.routerName">
+        <li v-if="item.dividerBefore" role="separator" class="menu-divider" />
         <el-sub-menu v-if="item.children" :index="item.routerName">
           <template #title>
             <el-icon><component :is="item.icon" /></el-icon>
@@ -61,11 +62,6 @@
       icon: shallowRef(HomeFilled),
     },
     {
-      name: '部门管理',
-      routerName: 'department',
-      icon: shallowRef(OfficeBuilding),
-    },
-    {
       name: '生产计划',
       routerName: 'production-plan',
       icon: shallowRef(IconTask),
@@ -84,6 +80,12 @@
       name: '标准产品管理',
       routerName: 'product',
       icon: shallowRef(IconProduct),
+    },
+    {
+      name: '部门管理',
+      dividerBefore: true,
+      routerName: 'department',
+      icon: shallowRef(OfficeBuilding),
     },
     {
       name: '员工管理',
@@ -105,6 +107,12 @@
 </script>
 
 <style lang="less" scoped>
+  .menu-divider {
+    height: 0;
+    margin: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    list-style: none;
+  }
   .el-menu-item {
     border-left: 3px solid transparent;
   }
