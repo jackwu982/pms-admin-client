@@ -18,7 +18,7 @@
             <el-menu-item :index="subMenu.routerName" @click="navTo(subMenu.routerName)">
               <template #title>
                 <el-icon v-if="subMenu.icon"><component :is="subMenu.icon" /></el-icon>
-                <span> {{ subMenu.name }}</span>
+                <span>{{ subMenu.name }}</span>
               </template>
             </el-menu-item>
           </template>
@@ -28,7 +28,7 @@
           <el-menu-item :index="item.routerName" @click="navTo(item.routerName)">
             <el-icon><component :is="item.icon" /></el-icon>
             <template #title>
-              <span> {{ item.name }}</span>
+              <span>{{ item.name }}</span>
             </template>
           </el-menu-item>
         </template>
@@ -41,11 +41,9 @@
   import { HomeFilled, OfficeBuilding } from '@element-plus/icons-vue'
   import { ref, watch, shallowRef, onMounted } from 'vue'
   import IconTask from '@/components/icons/IconTask.vue'
-  import IconUser from '@/components/icons/IconUser.vue'
-  import IconModel from '@/components/icons/IconModel.vue'
-  import IconStatistics from '@/components/icons/IconStatistics.vue'
   import IconOrder from '@/components/icons/IconOrder.vue'
-
+  import IconProduct from '@/components/icons/IconProduct.vue'
+  import IconUser from '@/components/icons/IconUser.vue'
   import { useRoute, useRouter } from 'vue-router'
 
   const route = useRoute()
@@ -67,55 +65,30 @@
       routerName: 'department',
       icon: shallowRef(OfficeBuilding),
     },
-
     {
-      name: '任务管理',
-      routerName: 'task',
+      name: '生产计划',
+      routerName: 'production-plan',
       icon: shallowRef(IconTask),
     },
-
+    {
+      name: '上报记录',
+      routerName: 'plan-operation-report',
+      icon: shallowRef(IconTask),
+    },
+    {
+      name: '销售单管理',
+      routerName: 'sale-order',
+      icon: shallowRef(IconOrder),
+    },
+    {
+      name: '标准产品管理',
+      routerName: 'product',
+      icon: shallowRef(IconProduct),
+    },
     {
       name: '员工管理',
       routerName: 'user',
       icon: shallowRef(IconUser),
-    },
-
-    {
-      name: '工序管理',
-      routerName: 'process',
-      icon: shallowRef(IconModel),
-      children: [
-        {
-          name: '分类',
-          routerName: 'process-category',
-        },
-        {
-          name: '标准工序',
-          routerName: 'process-standard',
-        },
-      ],
-    },
-
-    {
-      name: '工时统计',
-      routerName: 'statistics',
-      icon: shallowRef(IconStatistics),
-    },
-
-    {
-      name: '上报记录',
-      routerName: 'report',
-      icon: shallowRef(IconOrder),
-      children: [
-        {
-          name: '工时上报',
-          routerName: 'report-hours',
-        },
-        {
-          name: '标准工序上报',
-          routerName: 'report-standard',
-        },
-      ],
     },
   ])
   const navTo = (name: string) => {

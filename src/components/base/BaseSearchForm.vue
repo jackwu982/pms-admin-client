@@ -17,11 +17,11 @@
           <el-icon><refresh-right /></el-icon>
         </el-button>
 
-        <el-button v-if="!expanded" link @click="expanded = true">
+        <el-button v-if="$slots.more && !expanded" link @click="expanded = true">
           <span>更多筛选</span>
           <el-icon><arrow-down /></el-icon>
         </el-button>
-        <el-button v-else link @click="expanded = false">
+        <el-button v-else-if="$slots.more" link @click="expanded = false">
           <span>收起</span>
           <el-icon><arrow-up /></el-icon>
         </el-button>

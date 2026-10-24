@@ -23,6 +23,30 @@ const router = createRouter({
         },
 
         {
+          path: 'production-plan',
+          name: 'production-plan',
+          component: () => import('@/views/ProductionPlanView.vue'),
+        },
+
+        {
+          path: 'plan-operation-report',
+          name: 'plan-operation-report',
+          component: () => import('@/views/PlanOperationReportView.vue'),
+        },
+
+        {
+          path: 'sale-order',
+          name: 'sale-order',
+          component: () => import('@/views/SaleOrderView.vue'),
+        },
+
+        {
+          path: 'product',
+          name: 'product',
+          component: () => import('@/views/ProductView.vue'),
+        },
+
+        {
           path: 'task',
           name: 'task',
           component: () => import('@/views/TaskView.vue'),

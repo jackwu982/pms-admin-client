@@ -28,7 +28,7 @@ api.interceptors.response.use(
 
     notifyI18nMsg(res.data)
     if (code == 403 || code == 401) {
-      document.location.href = '/login'
+      document.location.href = '/admin/login'
     }
     return Promise.reject(res)
   },
