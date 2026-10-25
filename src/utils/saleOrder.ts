@@ -1,29 +1,26 @@
-import type { SaleOrder, SaleOrderPayload } from '../types/saleOrderType'
+import type { SaleOrder, SaleOrderPayload, SaleOrderItem } from '../types/saleOrderType'
 import type { Product } from '../types/productType'
 
-export function createSaleOrderForm(
-  order?: SaleOrder,
-  today = ''
-): Omit<SaleOrderPayload, 'productId'> & { productId?: number } {
+export function createSaleOrderForm(order?: SaleOrder, today = ''): SaleOrderPayload {
   return {
     orderNo: order?.orderNo ?? '',
     customerName: order?.customerName ?? '',
     orderDate: order?.orderDate ?? today,
-    productId: order?.productId,
-    productName: order?.productName ?? '',
-    model: order?.model ?? '',
-    unit: order?.unit ?? '',
     status: order?.status ?? 0,
     remark: order?.remark ?? '',
+    configurationDetails: order?.configurationDetails?.map((detail) => ({ ...detail })) ?? [],
+    items: order?.items.map((item) => ({ ...item })) ?? [],
   }
 }
-
 export function selectSaleOrderProduct(
-  form: ReturnType<typeof createSaleOrderForm>,
+  form: SaleOrderPayload,
   product: Pick<Product, 'id' | 'name' | 'model'>
 ) {
-  if (form.productId === product.id) return
-  form.productId = product.id
-  form.productName = product.name
-  form.model = product.model ?? ''
+  if (form.items.some((item) => item.productId === product.id)) return
+  form.items.push({
+    productId: product.id,
+    productName: product.name,
+    model: product.model ?? '',
+    unit: '',
+  } as SaleOrderItem)
 }

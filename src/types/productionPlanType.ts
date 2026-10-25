@@ -3,6 +3,7 @@ export interface ProductionPlan {
   planNo: string
   saleOrderId?: number
   productId: number
+  products?: { productId: number; productName: string }[]
   productName: string
   planStart?: string
   planEnd?: string
@@ -14,6 +15,8 @@ export interface ProductionPlan {
 export interface PlanPart {
   id: number
   planId: number
+  productId?: number
+  productName?: string
   sourcePartId?: number
   partName: string
   quantity: number

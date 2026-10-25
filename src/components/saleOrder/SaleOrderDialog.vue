@@ -2,7 +2,7 @@
   <el-dialog
     :model-value="true"
     :title="readonly ? '销售单详情' : order ? '编辑销售单' : '新增销售单'"
-    width="min(720px, 94vw)"
+    width="min(1080px, 94vw)"
     top="5vh"
     :close-on-click-modal="false"
     :before-close="close">
@@ -36,47 +36,102 @@
           </el-select>
         </el-form-item>
       </div>
-      <el-form-item label="产品" prop="productId">
-        <el-input v-if="readonly" :model-value="form.productName" />
-        <el-select
-          v-else
-          :model-value="form.productId"
-          filterable
-          remote
-          :remote-method="searchProducts"
-          :loading="productLoading"
-          placeholder="按产品名称搜索"
-          @change="chooseProduct">
-          <el-option
-            v-for="product in productOptions"
-            :key="product.id"
-            :value="product.id"
-            :label="productLabel(product)" />
-          <template #footer>
-            <el-button v-if="productFailed" link type="primary" @click="loadProducts(false)">
-              加载失败，重试
-            </el-button>
-            <el-button
-              v-else-if="hasMore"
-              link
-              type="primary"
-              :loading="productLoading"
-              @click="loadProducts(true)">
-              加载更多产品
-            </el-button>
-            <span v-else class="text-xs text-gray-500">可按名称搜索已启用的产品</span>
-          </template>
-        </el-select>
+      <el-form-item v-if="!readonly" label="添加商品">
+        <PlanResourceSelect
+          :fetch="fetchProducts"
+          placeholder="搜索并添加商品，可添加多个"
+          @select="addProduct" />
       </el-form-item>
-      <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <el-form-item label="产品名称">
-          <el-input :model-value="form.productName" readonly />
-        </el-form-item>
-        <el-form-item label="型号"><el-input :model-value="form.model" readonly /></el-form-item>
-        <el-form-item label="单位">
-          <el-input v-model="form.unit" :maxlength="20" placeholder="如：台、件" />
-        </el-form-item>
+      <el-form-item label="商品明细" prop="items">
+        <el-table :data="form.items" empty-text="请添加至少一个商品">
+          <el-table-column prop="productName" label="商品名称" min-width="160" />
+          <el-table-column prop="model" label="型号" min-width="120" />
+          <el-table-column label="单位" width="110">
+            <template #default="{ row }">
+              <el-input v-if="!readonly" v-model="row.unit" maxlength="20" />
+              <span v-else>{{ row.unit || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column v-if="!readonly" label="操作" width="70">
+            <template #default="{ $index }">
+              <el-button
+                link
+                type="danger"
+                :disabled="saving"
+                @click="form.items.splice($index, 1)">
+                移除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-sm font-medium">配置明细</span>
+        <el-button
+          v-if="!readonly"
+          type="primary"
+          link
+          :disabled="saving"
+          @click="addConfiguration">
+          添加配置
+        </el-button>
       </div>
+      <el-table :data="form.configurationDetails" border empty-text="暂无配置明细" class="mb-5">
+        <el-table-column label="编号" min-width="110">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.code ?? '-' }}</span>
+            <template v-else><el-input v-model="row.code" aria-label="编号" /></template>
+          </template>
+        </el-table-column>
+        <el-table-column label="名称" min-width="150">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.name ?? '-' }}</span>
+            <template v-else><el-input v-model="row.name" aria-label="名称" /></template>
+          </template>
+        </el-table-column>
+        <el-table-column label="规格" min-width="150">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.spec ?? '-' }}</span>
+            <template v-else><el-input v-model="row.spec" aria-label="规格" /></template>
+          </template>
+        </el-table-column>
+        <el-table-column label="数量" min-width="145">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.quantity ?? '-' }}</span>
+            <template v-else>
+              <el-input-number
+                v-model="row.quantity"
+                :min="0"
+                :controls="false"
+                class="w-full!"
+                aria-label="数量" />
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column label="单位" min-width="85">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.unit ?? '-' }}</span>
+            <template v-else><el-input v-model="row.unit" aria-label="单位" /></template>
+          </template>
+        </el-table-column>
+        <el-table-column label="备注" min-width="180">
+          <template #default="{ row }">
+            <span v-if="readonly">{{ row.remark ?? '-' }}</span>
+            <template v-else><el-input v-model="row.remark" aria-label="备注" /></template>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="!readonly" label="操作" width="70" fixed="right">
+          <template #default="{ $index }">
+            <el-button
+              link
+              type="danger"
+              :disabled="saving"
+              @click="form.configurationDetails.splice($index, 1)">
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
       <el-form-item label="备注">
         <el-input
           v-model="form.remark"
@@ -99,12 +154,14 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { reactive, ref } from 'vue'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { saleOrderApi } from '@/api/saleOrder'
   import { productApi } from '@/api/product'
   import { saleOrderStatuses, type SaleOrder } from '@/types/saleOrderType'
-  import type { Product } from '@/types/productType'
+  import PlanResourceSelect, {
+    type ResourceOption,
+  } from '@/components/productionPlan/PlanResourceSelect.vue'
   import { createSaleOrderForm, selectSaleOrderProduct } from '@/utils/saleOrder'
   import { useDayjs } from '@/util/dayjs'
 
@@ -120,67 +177,44 @@
       { required: true, whitespace: true, message: '请输入客户名称', trigger: 'blur' },
     ],
     orderDate: [{ required: true, message: '请选择下单日期', trigger: 'change' }],
-    productId: [{ required: true, message: '请选择产品', trigger: 'change' }],
+    items: [
+      { type: 'array', required: true, min: 1, message: '请至少添加一个商品', trigger: 'change' },
+    ],
     status: [{ required: true, message: '请选择状态', trigger: 'change' }],
   }
-  type ProductOption = Pick<Product, 'id' | 'name' | 'model'>
-  const products = ref<ProductOption[]>([])
-  const selectedProduct = ref<ProductOption | undefined>(
-    props.order
-      ? {
-          id: props.order.productId,
-          name: props.order.productName,
-          model: props.order.model,
-        }
-      : undefined
-  )
-  const productOptions = computed(() =>
-    selectedProduct.value
-      ? [selectedProduct.value, ...products.value.filter((p) => p.id !== selectedProduct.value?.id)]
-      : products.value
-  )
-  const productLoading = ref(false)
-  const productFailed = ref(false)
-  const hasMore = ref(false)
-  let productQuery = ''
-  let productPage = 0
-  let requestId = 0
-  function productLabel(product: ProductOption) {
-    return product.model ? `${product.name} / ${product.model}` : product.name
-  }
-  function searchProducts(query: string) {
-    productQuery = query.trim()
-    void loadProducts(false)
-  }
-  async function loadProducts(more: boolean) {
-    if (more && productLoading.value) return
-    const current = ++requestId
-    const page = more ? productPage + 1 : 1
-    productLoading.value = true
-    productFailed.value = false
-    if (!more) products.value = []
-    try {
-      const res = await productApi.list({
-        pageNum: page,
-        pageSize: 20,
-        name: productQuery || undefined,
-        status: 1,
-      })
-      if (current !== requestId) return
-      products.value = more ? [...products.value, ...res.data.list] : res.data.list
-      productPage = page
-      hasMore.value = page * 20 < res.data.total
-    } catch {
-      if (current === requestId) productFailed.value = true
-    } finally {
-      if (current === requestId) productLoading.value = false
+  async function fetchProducts(query: string, page: number) {
+    const res = await productApi.list({
+      pageNum: page,
+      pageSize: 20,
+      name: query.trim() || undefined,
+      status: 1,
+    })
+    return {
+      total: res.data.total,
+      list: res.data.list.map((p) => ({ ...p, label: `${p.name} / ${p.model || '-'}` })),
     }
   }
-  function chooseProduct(id: number) {
-    const product = productOptions.value.find((p) => p.id === id)
-    if (!product) return
-    selectSaleOrderProduct(form, product)
-    selectedProduct.value = product
+  function addProduct(product: ResourceOption) {
+    if (form.items.some((item) => item.productId === product.id)) {
+      ElMessage.info('该商品已添加')
+      return
+    }
+    selectSaleOrderProduct(form, {
+      id: product.id,
+      name: String(product.name),
+      model: String(product.model || ''),
+    })
+    formRef.value?.clearValidate('items')
+  }
+  function addConfiguration() {
+    form.configurationDetails.push({
+      code: '',
+      name: '',
+      spec: '',
+      quantity: null,
+      unit: '',
+      remark: '',
+    })
   }
   function close() {
     if (!saving.value) emit('closed')
@@ -188,15 +222,14 @@
   async function save() {
     if (props.readonly || saving.value) return
     const valid = await formRef.value?.validate().catch(() => false)
-    if (!valid || form.productId == null) return
+    if (!valid || !form.items.length) return
     saving.value = true
     try {
       const payload = {
         ...form,
-        productId: form.productId,
         orderNo: form.orderNo.trim(),
         customerName: form.customerName.trim(),
-        unit: form.unit.trim(),
+        items: form.items.map((item) => ({ ...item, unit: item.unit?.trim() || '' })),
       }
       if (props.order) await saleOrderApi.update({ ...payload, id: props.order.id })
       else await saleOrderApi.create(payload)
@@ -208,7 +241,4 @@
       saving.value = false
     }
   }
-  onMounted(() => {
-    if (!props.readonly) void loadProducts(false)
-  })
 </script>

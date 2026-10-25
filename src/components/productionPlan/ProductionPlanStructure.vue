@@ -58,6 +58,7 @@
             </el-table>
           </template>
         </el-table-column>
+        <el-table-column prop="productName" label="所属产品" min-width="160" />
         <el-table-column prop="partName" label="部件名称" min-width="160" />
         <el-table-column prop="quantity" label="计划数量" width="100" />
         <el-table-column label="纳入生产" width="100">

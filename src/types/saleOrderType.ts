@@ -8,22 +8,33 @@ export const saleOrderStatuses: { value: SaleOrderStatus; label: string }[] = [
   { value: 4, label: '已取消' },
 ]
 
+export interface SaleOrderItem {
+  id?: number
+  productId: number
+  productName: string
+  model?: string | null
+  unit?: string | null
+}
+export interface SaleOrderConfiguration {
+  code: string
+  name: string
+  spec: string
+  quantity: number | null
+  unit: string
+  remark: string
+}
 export interface SaleOrderPayload {
   orderNo: string
   customerName: string
   orderDate: string
-  productId: number
-  productName: string
-  model: string
-  unit: string
+  items: SaleOrderItem[]
+  configurationDetails: SaleOrderConfiguration[]
   status: SaleOrderStatus
   remark: string
 }
-
-export interface SaleOrder extends Omit<SaleOrderPayload, 'model' | 'unit' | 'remark'> {
+export interface SaleOrder extends Omit<SaleOrderPayload, 'remark' | 'configurationDetails'> {
   id: number
-  model?: string | null
-  unit?: string | null
+  configurationDetails?: SaleOrderConfiguration[] | null
   remark?: string | null
   createTime?: string
   updateTime?: string

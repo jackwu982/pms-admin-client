@@ -42,14 +42,14 @@
           <el-input-number v-model="form.quantity" :min="1" :max="2147483647" :precision="0" />
         </el-form-item>
         <template v-if="editor.kind === 'operation'">
-          <el-form-item v-if="standardFlag === 1" label="计划总数量" prop="target" required>
+          <el-form-item v-if="standardFlag === 1" label="计划总数量" prop="target">
             <el-input-number
               v-model="form.totalQuantity"
               :min="1"
               :max="2147483647"
               :precision="0" />
           </el-form-item>
-          <el-form-item v-else label="计划总时长（小时）" prop="target" required>
+          <el-form-item v-else label="计划总时长（小时）" prop="target">
             <el-input-number v-model="form.totalHours" :min="0" :max="99999999.99" :precision="2" />
           </el-form-item>
         </template>

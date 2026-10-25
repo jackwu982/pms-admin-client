@@ -1,5 +1,6 @@
 export interface OperationProgress {
   id: number
+  productName?: string
   partName: string
   processName: string
   standardFlag: number

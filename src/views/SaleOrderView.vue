@@ -47,13 +47,16 @@
           min-width="160"
           show-overflow-tooltip />
         <el-table-column prop="orderDate" label="下单日期" width="120" />
-        <el-table-column
-          prop="productName"
-          label="产品名称"
-          min-width="160"
-          show-overflow-tooltip />
-        <el-table-column prop="model" label="型号" min-width="130" show-overflow-tooltip />
-        <el-table-column prop="unit" label="单位" width="80" />
+        <el-table-column label="商品明细" min-width="240">
+          <template #default="{ row }">
+            <div v-for="item in row.items" :key="item.productId" class="py-1">
+              {{ item.productName }}
+              <span class="text-xs text-gray-500">
+                {{ item.model || '-' }} · {{ item.unit || '未设置单位' }}
+              </span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusTag(row.status)">

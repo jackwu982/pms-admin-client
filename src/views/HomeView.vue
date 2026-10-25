@@ -64,7 +64,7 @@
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { localStore } from '@/composables/store'
-  import { ArrowRight, OfficeBuilding, User } from '@element-plus/icons-vue'
+  import { ArrowRight, OfficeBuilding, User, Tools, ChatDotRound } from '@element-plus/icons-vue'
   import IconWelcome from '@/components/icons/IconWelcome.vue'
   import IconTask from '@/components/icons/IconTask.vue'
   import IconProduct from '@/components/icons/IconProduct.vue'
@@ -85,6 +85,34 @@
     {
       title: '业务管理',
       cards: [
+        {
+          label: '预计产能',
+          desc: '按标准工时和人员投入测算生产天数',
+          color: '#407ba5',
+          icon: IconTask,
+          route: '/capacity',
+        },
+        {
+          label: '维修单管理',
+          desc: '记录维修工时、故障原因与材料明细',
+          color: '#a07849',
+          icon: Tools,
+          route: '/repair-order',
+        },
+        {
+          label: '设备管理',
+          desc: '维护设备、保养周期与负责人',
+          color: '#568681',
+          icon: Tools,
+          route: '/equipment',
+        },
+        {
+          label: '投诉建议',
+          desc: '查看员工提交的投诉与建议',
+          color: '#9673b1',
+          icon: ChatDotRound,
+          route: '/feedback',
+        },
         {
           label: '生产看板',
           desc: '查看生产计划及各工序进度',

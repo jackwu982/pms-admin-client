@@ -61,6 +61,11 @@
             </div>
           </div>
           <el-table :data="plan.operations" row-key="id" empty-text="暂无启用工序">
+            <el-table-column
+              prop="productName"
+              label="所属产品"
+              min-width="150"
+              show-overflow-tooltip />
             <el-table-column prop="partName" label="部件" min-width="130" show-overflow-tooltip />
             <el-table-column
               prop="processName"

@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-  import { HomeFilled, OfficeBuilding } from '@element-plus/icons-vue'
+  import { HomeFilled, OfficeBuilding, Tools, ChatDotRound } from '@element-plus/icons-vue'
   import { ref, watch, shallowRef, onMounted } from 'vue'
   import IconTask from '@/components/icons/IconTask.vue'
   import IconOrder from '@/components/icons/IconOrder.vue'
@@ -67,6 +67,11 @@
       icon: shallowRef(IconTask),
     },
     {
+      name: '预计产能',
+      routerName: 'capacity',
+      icon: shallowRef(IconTask),
+    },
+    {
       name: '生产计划',
       routerName: 'production-plan',
       icon: shallowRef(IconTask),
@@ -85,6 +90,21 @@
       name: '标准产品管理',
       routerName: 'product',
       icon: shallowRef(IconProduct),
+    },
+    {
+      name: '设备管理',
+      routerName: 'equipment',
+      icon: shallowRef(Tools),
+    },
+    {
+      name: '维修单管理',
+      routerName: 'repair-order',
+      icon: shallowRef(Tools),
+    },
+    {
+      name: '投诉建议',
+      routerName: 'feedback',
+      icon: shallowRef(ChatDotRound),
     },
     {
       name: '部门管理',

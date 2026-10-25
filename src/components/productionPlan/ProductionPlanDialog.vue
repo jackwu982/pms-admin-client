@@ -28,15 +28,37 @@
           placeholder="按销售单号搜索"
           @select="selectOrder" />
       </el-form-item>
-      <el-form-item label="产品" prop="productId">
-        <el-input v-if="plan || form.saleOrderId" :model-value="form.productName" disabled />
-        <PlanResourceSelect
-          v-else
-          :model-value="form.productId"
-          :selected-label="form.productName"
-          :fetch="fetchProducts"
-          placeholder="按产品名称搜索"
-          @select="selectProduct" />
+      <el-form-item label="计划产品" prop="products">
+        <div class="w-full">
+          <template v-if="!plan">
+            <el-select
+              v-if="form.saleOrderId"
+              :model-value="form.products.map((item) => item.productId)"
+              multiple
+              placeholder="选择销售单中的多个商品"
+              @change="selectOrderProducts">
+              <el-option
+                v-for="item in orderItems"
+                :key="item.productId"
+                :value="item.productId"
+                :label="`${item.productName} / ${item.model || '-'}`" />
+            </el-select>
+            <PlanResourceSelect
+              v-else
+              :fetch="fetchProducts"
+              placeholder="搜索并添加产品，可选择多个"
+              @select="selectProduct" />
+          </template>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <el-tag
+              v-for="item in form.products"
+              :key="item.productId"
+              :closable="!plan && !saving"
+              @close="form.products = form.products.filter((p) => p.productId !== item.productId)">
+              {{ item.productName }}
+            </el-tag>
+          </div>
+        </div>
       </el-form-item>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <el-form-item label="开始日期">
@@ -87,19 +109,24 @@
   const form = reactive({
     planNo: p?.planNo ?? '',
     saleOrderId: p?.saleOrderId,
-    productId: p?.productId,
+    products:
+      p?.products?.map((item) => ({ ...item })) ??
+      (p ? [{ productId: p.productId, productName: p.productName }] : []),
     productName: p?.productName ?? '',
     planStart: p?.planStart ?? undefined,
     planEnd: p?.planEnd ?? undefined,
     status: p?.status ?? 0,
     remark: p?.remark ?? '',
   })
+  const orderItems = ref<import('@/types/saleOrderType').SaleOrderItem[]>([])
   const saleOrderLabel = ref('')
   const saving = ref(false)
   const formRef = ref<FormInstance>()
   const rules: FormRules = {
     planNo: [{ required: true, whitespace: true, message: '请输入计划编号', trigger: 'blur' }],
-    productId: [{ required: true, message: '请选择产品或销售单', trigger: 'change' }],
+    products: [
+      { type: 'array', required: true, min: 1, message: '请至少选择一个产品', trigger: 'change' },
+    ],
     planEnd: [
       {
         validator: (_r, _v, cb) =>
@@ -136,12 +163,22 @@
   function selectOrder(o: ResourceOption) {
     form.saleOrderId = o.id
     saleOrderLabel.value = o.label
-    form.productId = Number(o.productId)
-    form.productName = String(o.productName)
+    orderItems.value = (o.items as import('@/types/saleOrderType').SaleOrderItem[]) || []
+    selectOrderProducts(orderItems.value.map((item) => item.productId))
+    formRef.value?.clearValidate('products')
   }
-  function selectProduct(p: ResourceOption) {
-    form.productId = p.id
-    form.productName = String(p.name)
+  function selectOrderProducts(ids: number[]) {
+    form.products = orderItems.value
+      .filter((item) => ids.includes(item.productId))
+      .map((item) => ({ productId: item.productId, productName: item.productName }))
+  }
+  function selectProduct(product: ResourceOption) {
+    if (form.products.some((item) => item.productId === product.id)) {
+      ElMessage.info('该产品已添加')
+      return
+    }
+    form.products.push({ productId: product.id, productName: String(product.name) })
+    formRef.value?.clearValidate('products')
   }
   function close() {
     if (!saving.value) emit('closed')
@@ -150,12 +187,17 @@
     if (
       saving.value ||
       !(await formRef.value?.validate().catch(() => false)) ||
-      form.productId == null
+      !form.products.length
     )
       return
     saving.value = true
     try {
-      const payload = { ...form, productId: form.productId, planNo: form.planNo.trim() }
+      const payload = {
+        ...form,
+        productId: form.products[0]!.productId,
+        productName: form.products.map((item) => item.productName).join('、'),
+        planNo: form.planNo.trim(),
+      }
       if (p) await productionPlanApi.update({ ...payload, id: p.id })
       else await productionPlanApi.create(payload)
       ElMessage.success('计划保存成功')
