@@ -14,6 +14,7 @@ declare module 'vue' {
     BasePagination: typeof import('./src/components/base/BasePagination.vue')['default']
     BaseSearchForm: typeof import('./src/components/base/BaseSearchForm.vue')['default']
     BaseTableContainer: typeof import('./src/components/base/BaseTableContainer.vue')['default']
+    BoardChart: typeof import('./src/components/productionBoard/BoardChart.vue')['default']
     CatalogDialog: typeof import('./src/components/product/CatalogDialog.vue')['default']
     CategoryDialog: typeof import('./src/components/process/CategoryDialog.vue')['default']
     DepartmentDialog: typeof import('./src/components/department/DepartmentDialog.vue')['default']
@@ -61,7 +62,9 @@ declare module 'vue' {
     IconTask: typeof import('./src/components/icons/IconTask.vue')['default']
     IconUser: typeof import('./src/components/icons/IconUser.vue')['default']
     IconWelcome: typeof import('./src/components/icons/IconWelcome.vue')['default']
+    MaintenanceBoard: typeof import('./src/components/productionBoard/MaintenanceBoard.vue')['default']
     PlanItemDialog: typeof import('./src/components/productionPlan/PlanItemDialog.vue')['default']
+    PlanProgressBoard: typeof import('./src/components/productionBoard/PlanProgressBoard.vue')['default']
     PlanResourceSelect: typeof import('./src/components/productionPlan/PlanResourceSelect.vue')['default']
     ProcessDialog: typeof import('./src/components/task/ProcessDialog.vue')['default']
     ProcessTable: typeof import('./src/components/task/ProcessTable.vue')['default']
@@ -74,6 +77,7 @@ declare module 'vue' {
     StandardProcessDialog: typeof import('./src/components/process/StandardProcessDialog.vue')['default']
     SubTaskDialog: typeof import('./src/components/task/SubTaskDialog.vue')['default']
     TaskDialog: typeof import('./src/components/task/TaskDialog.vue')['default']
+    TodayReportsBoard: typeof import('./src/components/productionBoard/TodayReportsBoard.vue')['default']
     UserDialog: typeof import('./src/components/user/UserDialog.vue')['default']
   }
   export interface GlobalDirectives {
