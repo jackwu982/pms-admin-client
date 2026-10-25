@@ -86,6 +86,13 @@
       title: '业务管理',
       cards: [
         {
+          label: '生产看板',
+          desc: '查看生产计划及各工序进度',
+          color: '#297da1',
+          icon: IconTask,
+          route: '/production-board',
+        },
+        {
           label: '生产计划',
           desc: '管理生产安排、部件工序与计划人员',
           color: '#16877b',

@@ -23,6 +23,11 @@ const router = createRouter({
         },
 
         {
+          path: 'production-board',
+          name: 'production-board',
+          component: () => import('@/views/ProductionBoardView.vue'),
+        },
+        {
           path: 'production-plan',
           name: 'production-plan',
           component: () => import('@/views/ProductionPlanView.vue'),

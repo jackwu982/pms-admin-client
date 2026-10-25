@@ -62,6 +62,11 @@
       icon: shallowRef(HomeFilled),
     },
     {
+      name: '生产看板',
+      routerName: 'production-board',
+      icon: shallowRef(IconTask),
+    },
+    {
       name: '生产计划',
       routerName: 'production-plan',
       icon: shallowRef(IconTask),
