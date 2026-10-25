@@ -68,8 +68,6 @@ function bars(names: string[]): EChartsCoreOption {
 }
 export function planCharts(plans: PlanProgress[]) {
   const valid = plans.filter((p) => p.progress != null)
-  const pending = plans.length - valid.length
-  const complete = valid.filter((p) => Number(p.progress) >= 100).length
   return {
     progress: {
       ...bars(valid.map((p) => p.planNo)),
@@ -99,11 +97,6 @@ export function planCharts(plans: PlanProgress[]) {
         },
       ],
     } as EChartsCoreOption,
-    status: donut([
-      { name: '已达目标', value: complete, itemStyle: { color: colors.green } },
-      { name: '进行中', value: valid.length - complete, itemStyle: { color: colors.blue } },
-      { name: '待配置目标', value: pending, itemStyle: { color: colors.amber } },
-    ]),
   }
 }
 export function reportCharts(reports: PlanOperationReport[]) {
@@ -143,18 +136,6 @@ export function reportCharts(reports: PlanOperationReport[]) {
         },
       ],
     } as EChartsCoreOption,
-    types: donut([
-      {
-        name: '标准工序上报',
-        value: reports.filter((r) => r.standardFlag === 1).length,
-        itemStyle: { color: colors.blue },
-      },
-      {
-        name: '非标准工序上报',
-        value: reports.filter((r) => r.standardFlag !== 1).length,
-        itemStyle: { color: colors.green },
-      },
-    ]),
   }
 }
 export function maintenanceCharts(
@@ -217,5 +198,92 @@ export function maintenanceCharts(
         },
       ],
     } as EChartsCoreOption,
+  }
+}
+
+export function operationProgressChart(plan: PlanProgress): EChartsCoreOption {
+  const operations = plan.operations
+  const labels = new Map(
+    operations.map((o) => [
+      String(o.id),
+      `${o.productName || '未记录产品'} / ${o.partName}\n${o.processName}`,
+    ])
+  )
+  return {
+    ...base,
+    grid: { left: 260, right: 210, top: 20, bottom: 45 },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { formatter: '{value}%' },
+      splitLine: { lineStyle: { color: '#eef2f6' } },
+    },
+    yAxis: {
+      type: 'category',
+      inverse: true,
+      data: operations.map((o) => String(o.id)),
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: {
+        width: 240,
+        overflow: 'truncate',
+        lineHeight: 20,
+        formatter: (id: string) => labels.get(id) || id,
+      },
+    },
+    dataZoom:
+      operations.length > 8
+        ? [
+            {
+              type: 'slider',
+              yAxisIndex: 0,
+              startValue: 0,
+              endValue: 7,
+              width: 12,
+              right: 0,
+              filterMode: 'filter',
+            },
+          ]
+        : [],
+    tooltip: {
+      trigger: 'axis',
+      renderMode: 'richText',
+      confine: true,
+      axisPointer: { type: 'shadow' },
+      formatter: (params: { dataIndex: number }[]) => {
+        const o = operations[params[0]?.dataIndex ?? -1]
+        if (!o) return ''
+        const unit = o.standardFlag === 1 ? '件（合格）' : '小时'
+        return `${o.productName || '未记录产品'} / ${o.partName}\n${o.processName} · ${o.standardFlag === 1 ? '标准工序' : '非标准工序'}\n累计完成：${o.actual} ${unit}\n计划目标：${o.target != null && o.target > 0 ? o.target + ' ' + unit : '未配置'}\n进度：${o.progress == null ? '待配置目标' : o.progress + '%'}`
+      },
+    },
+    series: [
+      {
+        name: '工序进度',
+        type: 'bar',
+        barMaxWidth: 24,
+        showBackground: true,
+        backgroundStyle: { color: '#f1f5f9', borderRadius: 4 },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: (p: { dataIndex: number }) => {
+            const o = operations[p.dataIndex]!
+            return o.progress == null
+              ? `待配置目标 · 已完成 ${o.actual} ${o.standardFlag === 1 ? '件' : '小时'}`
+              : `${o.progress}% · ${o.actual} / ${o.target} ${o.standardFlag === 1 ? '件' : '小时'}`
+          },
+        },
+        data: operations.map((o) => ({
+          value: o.progress == null ? 0 : Math.min(100, Math.max(0, Number(o.progress))),
+          itemStyle: {
+            color: o.progress != null && o.progress >= 100 ? colors.green : colors.blue,
+            borderRadius: [0, 4, 4, 0],
+          },
+          label: { color: o.progress == null ? '#b45309' : '#475569' },
+        })),
+      },
+    ],
   }
 }

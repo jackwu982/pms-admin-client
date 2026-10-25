@@ -27,18 +27,12 @@
           <el-button link @click="load">点击重试</el-button>
         </el-alert>
         <el-empty v-else-if="!loading && !plans.length" description="暂无符合条件的生产中计划" />
-        <div v-if="!failed && plans.length" class="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div v-if="!failed && plans.length" class="mb-5">
           <div class="min-w-0 rounded-xl border border-gray-200 p-4">
             <h3 class="text-sm font-semibold">计划进度对比 · 当前页</h3>
             <BoardChart
               :option="charts.progress"
               description="当前页各生产计划进度，未配置目标的计划不计为零进度" />
-          </div>
-          <div class="min-w-0 rounded-xl border border-gray-200 p-4">
-            <h3 class="text-sm font-semibold">计划状态分布 · 当前页</h3>
-            <BoardChart
-              :option="charts.status"
-              description="当前页已达目标、进行中和待配置目标的计划数量" />
           </div>
         </div>
         <section
@@ -55,58 +49,30 @@
             </div>
             <el-tag type="primary">生产中</el-tag>
           </div>
-          <div class="mb-4 rounded-lg bg-gray-50 p-4">
-            <div class="mb-2 flex flex-wrap justify-between gap-2 text-sm">
-              <span>计划总进度</span>
-              <span>
-                已达目标 {{ plan.completedOperations }} / {{ plan.operations.length }} 道工序
-              </span>
-            </div>
-            <el-progress
-              v-if="plan.progress != null"
-              :percentage="Number(plan.progress)"
-              :stroke-width="12" />
-            <div v-else class="text-sm text-amber-600">
-              {{
-                plan.operations.length
-                  ? `${plan.missingTargets} 道工序未配置有效目标`
-                  : '暂无启用工序'
-              }}
-            </div>
+          <div
+            class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gray-50 p-4 text-sm">
+            <span>
+              计划整体进度：
+              <strong>{{ plan.progress == null ? '待配置目标' : `${plan.progress}%` }}</strong>
+            </span>
+            <span>
+              已达目标 {{ plan.completedOperations }} / {{ plan.operations.length }} 道工序
+            </span>
           </div>
-          <el-table :data="plan.operations" row-key="id" empty-text="暂无启用工序">
-            <el-table-column
-              prop="productName"
-              label="所属产品"
-              min-width="150"
-              show-overflow-tooltip />
-            <el-table-column prop="partName" label="部件" min-width="130" show-overflow-tooltip />
-            <el-table-column
-              prop="processName"
-              label="工序"
-              min-width="140"
-              show-overflow-tooltip />
-            <el-table-column label="类型" width="100">
-              <template #default="{ row }">
-                {{ row.standardFlag === 1 ? '标准工序' : '非标准工序' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="累计完成 / 计划目标" min-width="190">
-              <template #default="{ row }">
-                {{ row.actual }} / {{ row.target > 0 ? row.target : '未配置' }}
-                {{ row.standardFlag === 1 ? '件（合格）' : '小时' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="工序进度" min-width="220">
-              <template #default="{ row }">
-                <el-progress
-                  v-if="row.progress != null"
-                  :percentage="Number(row.progress)"
-                  :status="row.progress >= 100 ? 'success' : undefined" />
-                <span v-else class="text-amber-600">待配置目标</span>
-              </template>
-            </el-table-column>
-          </el-table>
+          <el-empty v-if="!plan.operations.length" description="暂无启用工序" />
+          <template v-else>
+            <p class="text-xs text-gray-500">
+              每条横柱代表一道工序；蓝色为进行中，绿色为已达目标。悬停可查看产品、部件、工序及完成数量或工时。
+            </p>
+            <div class="overflow-x-auto">
+              <div class="min-w-[800px]">
+                <BoardChart
+                  :option="operationProgressChart(plan)"
+                  :height="Math.max(300, Math.min(plan.operations.length, 8) * 76 + 90)"
+                  :description="`${plan.planNo} 各工序进度，包含产品、部件、工序、累计完成和计划目标`" />
+              </div>
+            </div>
+          </template>
         </section>
       </div>
       <BasePagination
@@ -123,7 +89,7 @@
   import { productionBoardApi } from '@/api/productionBoard'
   import type { PlanProgress } from '@/types/productionBoardType'
   import BoardChart from './BoardChart.vue'
-  import { planCharts } from '@/utils/boardCharts'
+  import { planCharts, operationProgressChart } from '@/utils/boardCharts'
   const charts = computed(() => planCharts(plans.value))
   const plans = ref<PlanProgress[]>([])
   const total = ref(0)

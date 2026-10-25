@@ -20,16 +20,12 @@
       type="error"
       :closable="false"
       class="mb-3!" />
-    <div v-if="!failed && reports.length" class="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <div v-if="!failed && reports.length" class="mb-5">
       <div class="min-w-0 rounded-xl border border-gray-200 p-4">
         <h3 class="text-sm font-semibold">今日各计划上报工时</h3>
         <BoardChart
           :option="charts.hours"
           description="今日各生产计划标准折算工时与非标准实际工时" />
-      </div>
-      <div class="min-w-0 rounded-xl border border-gray-200 p-4">
-        <h3 class="text-sm font-semibold">今日上报类型分布</h3>
-        <BoardChart :option="charts.types" description="今日标准与非标准工序的上报记录数" />
       </div>
     </div>
     <p class="text-xs text-gray-500">

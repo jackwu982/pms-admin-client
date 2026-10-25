@@ -3,9 +3,6 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="m-0 text-lg font-semibold">设备保养提醒</h2>
-        <p class="mt-2 mb-0 text-sm text-gray-500">
-          {{ date }} · 保养到期日 = 最近保养日期 + 保养周期（天）
-        </p>
       </div>
       <el-button :loading="loading" @click="load">刷新提醒</el-button>
     </div>
