@@ -17,7 +17,6 @@
       </section>
       <section class="dashboard-panel">
         <h3 class="mt-0 text-base font-semibold">今日上报记录</h3>
-        <p class="text-xs text-gray-500">无缝滚动 · 悬停或聚焦暂停 · 长文本悬停查看</p>
         <div
           ref="viewport"
           v-loading="loading"

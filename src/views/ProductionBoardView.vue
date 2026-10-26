@@ -11,7 +11,7 @@
       <PlanProgressBoard />
       <MaintenanceBoard />
     </div>
-    <TodayReportsBoard class="mt-4" />
+    <TodayReportsBoard />
   </div>
 </template>
 <script setup lang="ts">
@@ -38,25 +38,36 @@
 </script>
 <style scoped lang="less">
   .production-dashboard {
-    --board-chart-height: 280px;
+    display: grid;
+    grid-template-rows: auto minmax(250px, 1fr) minmax(250px, 1fr);
+    gap: 16px;
+    height: calc(100dvh - 40px);
+    min-height: 660px;
+    box-sizing: border-box;
     background: #f5f7fa;
     padding: 16px;
     border-radius: 12px;
   }
   .production-dashboard.is-fullscreen {
-    --board-chart-height: clamp(200px, calc((100vh - 330px) / 2), 480px);
     width: 100%;
     height: 100%;
     overflow: auto;
     border-radius: 0;
     padding: 20px;
   }
+  .production-dashboard > header {
+    margin-bottom: 0;
+  }
   .overview-grid {
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
   :deep(.dashboard-panel) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     min-width: 0;
     padding: 16px;
     border: 1px solid #e5e7eb;
@@ -64,11 +75,39 @@
     background: white;
   }
   :deep(.board-chart) {
-    height: var(--board-chart-height) !important;
+    flex: 1;
+    min-height: 0;
+    height: 0 !important;
+  }
+  :deep(.dashboard-panel > :not(.board-chart):not(.report-scroll):not(.el-empty)) {
+    flex-shrink: 0;
+  }
+  :deep(.today-board) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  :deep(.today-grid) {
+    flex: 1;
+    min-height: 0;
+  }
+  :deep(.report-scroll) {
+    flex: 1;
+    min-height: 0;
+    height: 0;
   }
   @media (max-width: 900px) {
+    .production-dashboard {
+      height: auto;
+      grid-template-rows: auto auto auto;
+    }
     .overview-grid {
       grid-template-columns: 1fr;
+    }
+    :deep(.board-chart),
+    :deep(.report-scroll) {
+      flex: none;
+      height: 280px !important;
     }
   }
 </style>
