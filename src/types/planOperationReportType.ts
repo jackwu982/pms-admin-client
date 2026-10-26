@@ -14,6 +14,7 @@ export interface PlanOperationReport {
   workHours: number
   reporterName: string
   reportTime: string
+  createTime?: string
   status: number
   remark?: string
 }

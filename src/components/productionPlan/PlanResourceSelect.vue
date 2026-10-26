@@ -50,7 +50,9 @@
   let page = 0
   let request = 0
   function search(value: string) {
-    query = value.trim()
+    const nextQuery = value.trim()
+    if (nextQuery === query && !failed.value && (loading.value || page > 0)) return
+    query = nextQuery
     void load(false)
   }
   async function load(more: boolean) {

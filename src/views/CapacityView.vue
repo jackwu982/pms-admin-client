@@ -43,7 +43,8 @@
         <p>产品工序加载失败</p>
         <el-button @click="loadProduct">重试</el-button>
       </div>
-      <el-empty v-else-if="!product" description="请选择产品以开始测算" />
+      <el-empty v-else-if="!product && !loading" description="请选择产品以开始测算" />
+      <div v-else-if="!product" class="min-h-60" />
       <template v-else>
         <div class="mb-5 flex items-center justify-between gap-4">
           <h3 class="m-0 text-base font-semibold">{{ product.name }}</h3>
@@ -133,7 +134,7 @@
     product.value ? standardWork(product.value) : { operations: [], incomplete: false, minutes: 0 }
   )
   const result = computed(() =>
-    !loading.value && !failed.value && !work.value.incomplete
+    !failed.value && !work.value.incomplete
       ? estimateCapacity(work.value.minutes, quantity.value, people.value, hours.value)
       : null
   )
@@ -143,6 +144,7 @@
     return { list: res.data.list.map((p) => ({ id: p.id, label: p.name })), total: res.data.total }
   }
   function selectProduct(option: ResourceOption) {
+    if (productId.value === option.id && !failed.value) return
     productId.value = option.id
     productLabel.value = option.label
     void loadProduct()
@@ -153,7 +155,6 @@
     const current = ++request
     loading.value = true
     failed.value = false
-    product.value = undefined
     try {
       const res = await productApi.get(productId.value)
       if (current === request) {

@@ -65,7 +65,10 @@
                       {{ row.status === 2 ? '已驳回' : '待审核' }}
                     </el-tag>
                   </div>
-                  <span class="text-xs text-gray-500">{{ time(row.reportTime) }}</span>
+                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                    <span>上报日期：{{ reportDateText(row.reportTime) }}</span>
+                    <span>上报时间：{{ time(row.createTime) }}</span>
+                  </div>
                 </div>
                 <div class="mt-3 text-sm text-gray-500">
                   生产计划 · {{ row.planNo || '未记录' }}
@@ -141,8 +144,12 @@
       el.scrollTop %= cycleHeight
     }
   }
-  const time = (value: string) =>
-    new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })
+  const reportDateText = (value: string) =>
+    new Date(value).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
+  const time = (value?: string) =>
+    value
+      ? new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })
+      : '未记录'
   let request = 0,
     animation = 0,
     previous = 0
