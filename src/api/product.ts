@@ -19,6 +19,10 @@ function catalogApi<T>(resource: string) {
   }
 }
 
-export const productApi = catalogApi<Product>('products')
+export const productApi = {
+  ...catalogApi<Product>('products'),
+  copy: (id: number) => api.post<unknown, HttpResponse<Product>>(`/api/products/${id}/copy`),
+  remove: (id: number) => api.delete(`/api/products/${id}`),
+}
 export const partApi = catalogApi<Part>('parts')
 export const operationApi = catalogApi<Operation>('operations')

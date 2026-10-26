@@ -1,6 +1,11 @@
 <template>
   <BaseTableContainer>
     <template #header-left-content><h2 class="text-lg font-semibold">工时统计</h2></template>
+    <template #header-right-content>
+      <el-button :loading="exporting" @click="exportStatistics">
+        {{ exporting ? exportProgress : '导出员工、任务、部门统计' }}
+      </el-button>
+    </template>
     <template #filter-content>
       <BaseSearchForm @search="load" @reset="reset">
         <el-form-item label="日期范围">
@@ -99,12 +104,63 @@
   </BaseTableContainer>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, onUnmounted, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { workHourStatisticsApi } from '@/api/workHourStatistics'
   import type { WorkHourRow, WorkHourDimension } from '@/types/workHourStatistics'
   import { groupWorkHours, summarizeWorkHours } from '@/utils/workHourStatistics'
   import { DATE_SHORTCUTS } from '@/util/dateShortcuts'
+  const exporting = ref(false)
+  const exportProgress = ref('准备导出')
+  let disposed = false
+  onUnmounted(() => {
+    disposed = true
+  })
+  async function exportStatistics() {
+    if (exporting.value) return
+    const startDate = dateRange.value?.[0]
+    const endDate = dateRange.value?.[1]
+    if (startDate && endDate && startDate > endDate) {
+      ElMessage.warning('开始日期不能晚于结束日期')
+      return
+    }
+    exporting.value = true
+    exportProgress.value = '正在读取数据'
+    try {
+      const { fetchAllWorkHours, workHourWorkbook } = await import('@/utils/workHourExport')
+      const data = await fetchAllWorkHours(
+        async (pageNum, pageSize) => {
+          if (disposed) throw new Error('页面已关闭')
+          const res = await workHourStatisticsApi.listPage({
+            startDate,
+            endDate,
+            pageNum,
+            pageSize,
+          })
+          return res.data
+        },
+        (loaded, total) => {
+          exportProgress.value = `已读取 ${loaded} / ${total}`
+        }
+      )
+      if (disposed) return
+      if (!data.length) {
+        ElMessage.info('该日期范围内暂无可导出的数据')
+        return
+      }
+      const XLSX = await import('xlsx')
+      if (disposed) return
+      XLSX.writeFile(
+        workHourWorkbook(data, startDate, endDate),
+        `工时统计_${startDate || '不限'}_${endDate || '不限'}.xlsx`
+      )
+      ElMessage.success('已导出三个维度的汇总和明细')
+    } catch {
+      if (!disposed) ElMessage.error('导出失败，请重试；未生成不完整文件')
+    } finally {
+      exporting.value = false
+    }
+  }
   const dateRange = ref<[string, string] | null>(
     DATE_SHORTCUTS.find((s) => s.text === '本周')?.value() ?? null
   )

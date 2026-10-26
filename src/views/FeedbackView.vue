@@ -30,12 +30,20 @@
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
         <el-table-column prop="content" label="内容" min-width="280" show-overflow-tooltip />
         <el-table-column prop="userName" label="提交人" width="140" />
+        <el-table-column label="反馈状态" width="110">
+          <template #default="{ row }">{{ statuses[row.feedbackStatus ?? 0] }}</template>
+        </el-table-column>
+        <el-table-column
+          prop="feedbackOpinion"
+          label="反馈意见"
+          min-width="200"
+          show-overflow-tooltip />
         <el-table-column label="提交时间" width="180">
           <template #default="{ row }">{{ dayjsFormat(row.createTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="90" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="selected = row as Feedback">查看</el-button>
+            <el-button link type="primary" @click="open(row as Feedback)">查看 / 反馈</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -51,6 +59,9 @@
     :model-value="!!selected"
     title="投诉建议详情"
     width="640px"
+    :close-on-click-modal="!saving"
+    :close-on-press-escape="!saving"
+    :show-close="!saving"
     @close="selected = undefined">
     <template v-if="selected">
       <div class="mb-4 text-sm text-gray-500">
@@ -61,6 +72,30 @@
       <div class="max-h-[60vh] overflow-y-auto text-sm leading-7 break-words whitespace-pre-wrap">
         {{ selected.content }}
       </div>
+      <el-form class="mt-5" label-position="top" :disabled="saving">
+        <el-form-item label="反馈状态">
+          <el-select v-model="response.feedbackStatus">
+            <el-option
+              v-for="(label, value) in statuses"
+              :key="value"
+              :label="label"
+              :value="value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="反馈意见">
+          <el-input
+            v-model="response.feedbackOpinion"
+            type="textarea"
+            :rows="4"
+            maxlength="5000"
+            show-word-limit
+            placeholder="填写给提交人的反馈意见" />
+        </el-form-item>
+      </el-form>
+    </template>
+    <template #footer>
+      <el-button :disabled="saving" @click="selected = undefined">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="saveResponse">保存反馈</el-button>
     </template>
   </el-dialog>
 </template>
@@ -69,6 +104,34 @@
   import { feedbackApi } from '@/api/feedback'
   import type { Feedback } from '@/types/support'
   import { useDayjs } from '@/util/dayjs'
+  import { ElMessage } from 'element-plus'
+  const statuses = ['待处理', '处理中', '已处理']
+  const saving = ref(false)
+  const response = reactive({ feedbackStatus: 0, feedbackOpinion: '' })
+  function open(row: Feedback) {
+    selected.value = row
+    response.feedbackStatus = row.feedbackStatus ?? 0
+    response.feedbackOpinion = row.feedbackOpinion ?? ''
+  }
+  async function saveResponse() {
+    if (!selected.value || saving.value) return
+    const opinion = response.feedbackOpinion.trim()
+    if (response.feedbackStatus === 2 && !opinion) {
+      ElMessage.warning('已处理时请填写反馈意见')
+      return
+    }
+    saving.value = true
+    try {
+      await feedbackApi.respond(selected.value.id, { ...response, feedbackOpinion: opinion })
+      ElMessage.success('反馈已保存')
+      selected.value = undefined
+      await load()
+    } catch {
+      /* Shared API client displays failures. */
+    } finally {
+      saving.value = false
+    }
+  }
   const { dayjsFormat } = useDayjs()
   const params = reactive({
     keyword: '',

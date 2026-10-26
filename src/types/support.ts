@@ -9,6 +9,8 @@ export interface Equipment {
   ownerName?: string
 }
 export interface Feedback {
+  feedbackStatus?: number
+  feedbackOpinion?: string
   id: number
   type: number
   title: string

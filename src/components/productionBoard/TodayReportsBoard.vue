@@ -1,19 +1,5 @@
 <template>
   <section class="today-board">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 class="m-0 text-lg font-semibold">今日上报记录</h2>
-        <p class="mt-2 mb-0 text-sm text-gray-500">
-          {{ reportDate || '加载日期中' }} · 共 {{ reports.length }} 条 · 按上报日期展示
-        </p>
-      </div>
-      <div class="flex gap-2">
-        <el-button :disabled="!reports.length" @click="paused = !paused">
-          {{ paused ? '继续滚动' : '暂停滚动' }}
-        </el-button>
-        <el-button :loading="loading" @click="load">刷新</el-button>
-      </div>
-    </div>
     <el-alert
       v-if="failed"
       title="上报记录加载失败，请重试"
@@ -31,9 +17,7 @@
       </section>
       <section class="dashboard-panel">
         <h3 class="mt-0 text-base font-semibold">今日上报记录</h3>
-        <p class="text-xs text-gray-500">
-          自动循环滚动，鼠标悬停或键盘聚焦时暂停。标准工序展示完成数量，非标准工序展示实际工时。
-        </p>
+        <p class="text-xs text-gray-500">无缝滚动 · 悬停或聚焦暂停 · 长文本悬停查看</p>
         <div
           ref="viewport"
           v-loading="loading"
@@ -51,58 +35,53 @@
               :key="copy"
               class="report-group"
               :aria-hidden="copy === 2 ? true : undefined">
-              <article
-                v-for="row in reports"
-                :key="row.id"
-                class="mb-3 rounded-xl border border-gray-200 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <strong>{{ row.reporterName || '未记录姓名' }}</strong>
-                    <el-tag :type="row.standardFlag === 1 ? 'primary' : 'info'">
-                      {{ row.standardFlag === 1 ? '标准工序' : '非标准工序' }}
-                    </el-tag>
-                    <el-tag v-if="row.status !== 1" type="warning">
-                      {{ row.status === 2 ? '已驳回' : '待审核' }}
-                    </el-tag>
-                  </div>
-                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                    <span>上报日期：{{ reportDateText(row.reportTime) }}</span>
-                    <span>上报时间：{{ time(row.createTime) }}</span>
-                  </div>
+              <article v-for="row in reports" :key="row.id" class="report-row">
+                <div class="flex min-w-0 items-center gap-2">
+                  <strong class="shrink-0">{{ row.reporterName || '未记录姓名' }}</strong>
+                  <span class="min-w-0 flex-1 truncate text-gray-500" :title="row.planNo">
+                    计划 · {{ row.planNo || '未记录' }}
+                  </span>
+                  <el-tag size="small" :type="row.standardFlag === 1 ? 'primary' : 'info'">
+                    {{ row.standardFlag === 1 ? '标准' : '非标准' }}
+                  </el-tag>
+                  <el-tag v-if="row.status !== 1" size="small" type="warning">
+                    {{ row.status === 2 ? '已驳回' : '待审核' }}
+                  </el-tag>
                 </div>
-                <div class="mt-3 text-sm text-gray-500">
-                  生产计划 · {{ row.planNo || '未记录' }}
-                </div>
-                <div class="mt-2 text-base leading-7 break-words">
+                <div
+                  class="truncate"
+                  :title="`${row.productName || '未记录产品'} / ${row.partName || '未记录部件'} / ${row.processName || '未记录工序'}`">
                   {{ row.productName || '未记录产品' }} / {{ row.partName || '未记录部件' }} /
                   {{ row.processName || '未记录工序' }}
                 </div>
-                <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-gray-50 p-3 text-sm">
+                <div class="flex flex-wrap gap-x-3 text-gray-600">
                   <template v-if="row.standardFlag === 1">
                     <span>
-                      完成数量
-                      <strong>{{ row.reportQty }}</strong>
+                      完成
+                      <strong class="text-gray-900">{{ row.reportQty }}</strong>
                     </span>
                     <span>
                       合格
-                      <strong>{{ row.qualifiedQty }}</strong>
+                      <strong class="text-gray-900">{{ row.qualifiedQty }}</strong>
                     </span>
                     <span>
                       不良
-                      <strong>{{ row.defectQty }}</strong>
+                      <strong class="text-gray-900">{{ row.defectQty }}</strong>
                     </span>
                   </template>
                   <span>
                     {{ row.standardFlag === 1 ? '折算工时' : '实际工时' }}
-                    <strong>{{ row.workHours }}</strong>
+                    <strong class="text-blue-600">{{ row.workHours }}</strong>
                     小时
                   </span>
                 </div>
-                <p
-                  v-if="row.remark"
-                  class="mt-3 mb-0 text-sm break-words whitespace-pre-wrap text-gray-500">
+                <div class="flex flex-wrap gap-x-3 text-gray-500">
+                  <span>上报日期：{{ reportDateText(row.reportTime) }}</span>
+                  <span>上报时间：{{ time(row.createTime) }}</span>
+                </div>
+                <div v-if="row.remark" class="truncate text-gray-500" :title="row.remark">
                   备注：{{ row.remark }}
-                </p>
+                </div>
               </article>
             </div>
           </div>
@@ -228,6 +207,15 @@
     .today-grid {
       grid-template-columns: 1fr;
     }
+  }
+  .report-row {
+    padding: 8px 6px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 12px;
+    line-height: 20px;
+  }
+  .report-row:nth-child(even) {
+    background: #f8fafc;
   }
   .report-group {
     display: flow-root;
