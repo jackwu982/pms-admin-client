@@ -12,6 +12,11 @@ export interface MaintenanceReminder {
   remainingDays?: number | null
 }
 export const productionBoardApi = {
+  report: (params: Record<string, unknown>) =>
+    api.get<unknown, HttpResponse<{ list: PlanProgress[]; total: number }>>(
+      '/api/production-plans/report',
+      { params }
+    ),
   todayReports: () =>
     api.get<
       unknown,

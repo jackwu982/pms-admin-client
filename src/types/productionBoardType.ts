@@ -9,6 +9,7 @@ export interface OperationProgress {
   progress: number | null
 }
 export interface PlanProgress {
+  status?: number
   id: number
   planNo: string
   productName: string

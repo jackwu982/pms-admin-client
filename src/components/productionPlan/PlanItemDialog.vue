@@ -40,6 +40,9 @@
         class="plan-config-form">
         <el-form-item v-if="editor.kind === 'part'" label="计划数量" prop="quantity">
           <el-input-number v-model="form.quantity" :min="1" :max="2147483647" :precision="0" />
+          <div class="mt-2 w-full text-xs text-gray-500">
+            保存后，未填写计划总数量的标准工序将同步此数量，已填写的数量保持不变。
+          </div>
         </el-form-item>
         <template v-if="editor.kind === 'operation'">
           <el-form-item v-if="standardFlag === 1" label="计划总数量" prop="target">

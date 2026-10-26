@@ -11,6 +11,11 @@ const router = createRouter({
       component: DEFAULT_LAYOUT,
       redirect: '/homepage',
       children: [
+        {
+          path: 'production-report',
+          name: 'production-report',
+          component: () => import('@/views/ProductionReportView.vue'),
+        },
         { path: 'capacity', name: 'capacity', component: () => import('@/views/CapacityView.vue') },
         {
           path: 'repair-order',

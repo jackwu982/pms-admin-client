@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 import {
   House,
+  DataAnalysis,
   DataBoard,
   Histogram,
   TrendCharts,
@@ -35,6 +36,14 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: '生产管理',
     cards: [
+      {
+        label: '报表',
+        name: 'production-report',
+        route: '/production-report',
+        icon: DataAnalysis,
+        desc: '查询各生产计划整体进度与目标完成情况',
+        color: '#3978ba',
+      },
       {
         label: '工时统计',
         name: 'statistics',
