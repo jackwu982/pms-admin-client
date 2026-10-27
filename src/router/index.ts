@@ -51,6 +51,12 @@ const router = createRouter({
         },
 
         {
+          path: 'production-plan/:id',
+          name: 'production-plan-manage',
+          component: () => import('@/views/ProductionPlanManageView.vue'),
+          meta: { activeMenu: 'production-plan' },
+        },
+        {
           path: 'plan-operation-report',
           name: 'plan-operation-report',
           component: () => import('@/views/PlanOperationReportView.vue'),

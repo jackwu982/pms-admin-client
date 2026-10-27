@@ -33,7 +33,7 @@
 
   const route = useRoute()
   const router = useRouter()
-  const currentRouter = computed(() => String(route.name ?? ''))
+  const currentRouter = computed(() => String(route.meta.activeMenu ?? route.name ?? ''))
   const navTo = (name: string) => router.push({ name })
 </script>
 <style lang="less" scoped>

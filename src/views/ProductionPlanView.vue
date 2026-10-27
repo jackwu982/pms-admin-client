@@ -24,21 +24,7 @@
     </template>
     <template #content>
       <el-button v-if="failed" link type="primary" @click="load">计划加载失败，重试</el-button>
-      <el-table
-        v-loading="loading"
-        :data="plans"
-        row-key="id"
-        :expand-row-keys="expanded"
-        @expand-change="onExpand">
-        <el-table-column type="expand">
-          <template #default="{ row }">
-            <ProductionPlanStructure
-              v-if="expanded.includes(String(row.id))"
-              :plan="row as ProductionPlan"
-              :revision="revisions[row.id] ?? 0"
-              @edit="editor = $event" />
-          </template>
-        </el-table-column>
+      <el-table v-loading="loading" :data="plans" row-key="id">
         <el-table-column prop="planNo" label="计划编号" min-width="160" />
         <el-table-column prop="productName" label="产品名称" min-width="160" />
         <el-table-column prop="saleOrderId" label="销售单 ID" min-width="170" />
@@ -51,14 +37,14 @@
           <template #default="{ row }">{{ planStatuses[row.status] ?? '-' }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openPlan(row as ProductionPlan)">编辑</el-button>
             <el-button
               link
               type="primary"
-              @click="editor = { kind: 'member', plan: row as ProductionPlan }">
-              调整人员
+              @click="router.push({ name: 'production-plan-manage', params: { id: row.id } })">
+              计划详情
             </el-button>
           </template>
         </el-table-column>
@@ -76,26 +62,15 @@
     :plan="editingPlan"
     @closed="showPlan = false"
     @saved="planSaved" />
-  <PlanMembersDialog
-    v-if="editor?.kind === 'member'"
-    :plan="editor.plan"
-    @closed="editor = undefined"
-    @saved="membersSaved" />
-  <PlanItemDialog
-    v-else-if="editor"
-    :editor="editor"
-    @closed="editor = undefined"
-    @saved="itemSaved" />
 </template>
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import { Plus } from '@element-plus/icons-vue'
   import { productionPlanApi } from '@/api/productionPlan'
-  import { planStatuses, type ProductionPlan, type PlanEditor } from '@/types/productionPlanType'
+  import { planStatuses, type ProductionPlan } from '@/types/productionPlanType'
   import ProductionPlanDialog from '@/components/productionPlan/ProductionPlanDialog.vue'
-  import ProductionPlanStructure from '@/components/productionPlan/ProductionPlanStructure.vue'
-  import PlanItemDialog from '@/components/productionPlan/PlanItemDialog.vue'
-  import PlanMembersDialog from '@/components/productionPlan/PlanMembersDialog.vue'
+  const router = useRouter()
   const params = reactive({
     pageNum: 1,
     pageSize: 10,
@@ -107,9 +82,6 @@
   const total = ref(0)
   const loading = ref(false)
   const failed = ref(false)
-  const expanded = ref<string[]>([])
-  const revisions = reactive<Record<number, number>>({})
-  const editor = ref<PlanEditor>()
   const showPlan = ref(false)
   const editingPlan = ref<ProductionPlan>()
   let request = 0
@@ -127,7 +99,6 @@
       if (current !== request) return
       plans.value = res.data.list ?? []
       total.value = res.data.total ?? 0
-      expanded.value = expanded.value.filter((id) => plans.value.some((p) => String(p.id) === id))
     } catch {
       if (current === request) {
         failed.value = true
@@ -137,9 +108,6 @@
     } finally {
       if (current === request) loading.value = false
     }
-  }
-  function onExpand(_row: ProductionPlan, rows: ProductionPlan[] | boolean) {
-    if (Array.isArray(rows)) expanded.value = rows.map((r) => String(r.id))
   }
   function search() {
     params.pageNum = 1
@@ -159,17 +127,6 @@
     showPlan.value = false
     if (!editingPlan.value) params.pageNum = 1
     void load()
-  }
-  function membersSaved() {
-    const id = editor.value?.plan.id
-    if (id != null) revisions[id] = (revisions[id] ?? 0) + 1
-  }
-  function itemSaved() {
-    const id = editor.value?.plan.id
-    editor.value = undefined
-    if (id == null) return
-    revisions[id] = (revisions[id] ?? 0) + 1
-    if (!expanded.value.includes(String(id))) expanded.value.push(String(id))
   }
   onMounted(load)
 </script>
