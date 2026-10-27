@@ -58,7 +58,7 @@
               link
               type="primary"
               @click="editor = { kind: 'member', plan: row as ProductionPlan }">
-              新增人员
+              调整人员
             </el-button>
           </template>
         </el-table-column>
@@ -76,7 +76,16 @@
     :plan="editingPlan"
     @closed="showPlan = false"
     @saved="planSaved" />
-  <PlanItemDialog v-if="editor" :editor="editor" @closed="editor = undefined" @saved="itemSaved" />
+  <PlanMembersDialog
+    v-if="editor?.kind === 'member'"
+    :plan="editor.plan"
+    @closed="editor = undefined"
+    @saved="membersSaved" />
+  <PlanItemDialog
+    v-else-if="editor"
+    :editor="editor"
+    @closed="editor = undefined"
+    @saved="itemSaved" />
 </template>
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
@@ -86,6 +95,7 @@
   import ProductionPlanDialog from '@/components/productionPlan/ProductionPlanDialog.vue'
   import ProductionPlanStructure from '@/components/productionPlan/ProductionPlanStructure.vue'
   import PlanItemDialog from '@/components/productionPlan/PlanItemDialog.vue'
+  import PlanMembersDialog from '@/components/productionPlan/PlanMembersDialog.vue'
   const params = reactive({
     pageNum: 1,
     pageSize: 10,
@@ -149,6 +159,10 @@
     showPlan.value = false
     if (!editingPlan.value) params.pageNum = 1
     void load()
+  }
+  function membersSaved() {
+    const id = editor.value?.plan.id
+    if (id != null) revisions[id] = (revisions[id] ?? 0) + 1
   }
   function itemSaved() {
     const id = editor.value?.plan.id

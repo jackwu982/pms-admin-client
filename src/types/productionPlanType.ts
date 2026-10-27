@@ -52,4 +52,4 @@ export const memberTypes = ['核心人员', '配合人员', '辅助人员']
 export type PlanEditor =
   | { kind: 'part'; plan: ProductionPlan; record: PlanPart }
   | { kind: 'operation'; plan: ProductionPlan; part: PlanPart; record: PlanOperation }
-  | { kind: 'member'; plan: ProductionPlan; record?: PlanMember }
+  | { kind: 'member'; plan: ProductionPlan }

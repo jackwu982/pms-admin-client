@@ -19,4 +19,7 @@ function resource<T>(path: string) {
 export const productionPlanApi = resource<ProductionPlan>('production-plans')
 export const planPartApi = resource<PlanPart>('plan-parts')
 export const planOperationApi = resource<PlanOperation>('plan-operations')
-export const planMemberApi = resource<PlanMember>('production-plan-members')
+export const planMemberApi = {
+  ...resource<PlanMember>('production-plan-members'),
+  remove: (id: number) => api.delete(`/api/production-plan-members/${id}`),
+}

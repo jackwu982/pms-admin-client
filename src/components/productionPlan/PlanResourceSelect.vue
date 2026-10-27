@@ -1,6 +1,8 @@
 <template>
   <el-select
     :model-value="modelValue"
+    :multiple="multiple"
+    :disabled="disabled"
     filterable
     remote
     :remote-method="search"
@@ -28,21 +30,30 @@
     [key: string]: unknown
   }
   const props = defineProps<{
-    modelValue?: number
+    modelValue?: number | number[]
+    multiple?: boolean
+    disabled?: boolean
+    selectedOptions?: ResourceOption[]
     selectedLabel?: string
     placeholder?: string
     fetch: (query: string, page: number) => Promise<{ list: ResourceOption[]; total: number }>
   }>()
-  const emit = defineEmits<{ select: [option: ResourceOption] }>()
+  const emit = defineEmits<{
+    select: [option: ResourceOption]
+    change: [options: ResourceOption[]]
+  }>()
   const rows = ref<ResourceOption[]>([])
-  const options = computed(() =>
-    props.modelValue != null && !rows.value.some((r) => r.id === props.modelValue)
-      ? [
-          { id: props.modelValue, label: props.selectedLabel || String(props.modelValue) },
-          ...rows.value,
-        ]
-      : rows.value
-  )
+  const options = computed(() => {
+    const selected = props.multiple
+      ? (props.selectedOptions ?? [])
+      : typeof props.modelValue === 'number'
+        ? [{ id: props.modelValue, label: props.selectedLabel || String(props.modelValue) }]
+        : []
+    return [
+      ...selected.filter((item) => !rows.value.some((row) => row.id === item.id)),
+      ...rows.value,
+    ]
+  })
   const loading = ref(false)
   const failed = ref(false)
   const hasMore = ref(false)
@@ -74,8 +85,15 @@
       if (current === request) loading.value = false
     }
   }
-  function choose(id: number) {
-    const option = rows.value.find((r) => r.id === id)
+  function choose(id: number | number[]) {
+    if (Array.isArray(id)) {
+      emit(
+        'change',
+        options.value.filter((option) => id.includes(option.id))
+      )
+      return
+    }
+    const option = options.value.find((r) => r.id === id)
     if (option) emit('select', option)
   }
   onMounted(() => load(false))

@@ -111,31 +111,52 @@
         </el-table-column>
       </el-table>
       <div class="my-3 font-semibold">计划人员</div>
-      <el-table :data="detail.members ?? []" row-key="id" empty-text="暂无计划人员">
-        <el-table-column prop="userName" label="姓名" min-width="150" />
-        <el-table-column label="类型" width="120">
-          <template #default="{ row }">{{ memberTypes[row.memberType - 1] ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="150" />
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              @click="emit('edit', { kind: 'member', plan, record: row as PlanMember })">
-              编辑
-            </el-button>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <el-card v-for="group in memberGroups" :key="group.type" shadow="never" class="min-w-0">
+          <template #header>
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-semibold">{{ group.label }}</span>
+              <el-tag size="small" effect="plain">{{ group.members.length }} 人</el-tag>
+            </div>
           </template>
-        </el-table-column>
-      </el-table>
+          <ul v-if="group.members.length" class="m-0 list-none space-y-3 p-0">
+            <li
+              v-for="member in group.members"
+              :key="member.id"
+              class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-sm break-words">{{ member.userName }}</div>
+                <p v-if="member.remark" class="mt-1 mb-0 text-xs break-words text-gray-500">
+                  {{ member.remark }}
+                </p>
+              </div>
+              <el-button
+                link
+                type="danger"
+                class="shrink-0"
+                :aria-label="`删除${group.label}${member.userName}`"
+                :loading="saving.has(`member-${member.id}`)"
+                @click="deleteMember(member)">
+                删除
+              </el-button>
+            </li>
+          </ul>
+          <div v-else class="py-5 text-center text-sm text-gray-500">暂无{{ group.label }}</div>
+        </el-card>
+      </div>
     </template>
   </div>
 </template>
 <script setup lang="ts">
-  import { reactive, ref, watch } from 'vue'
-  import { ElMessage } from 'element-plus'
+  import { computed, reactive, ref, watch } from 'vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { planOperationTarget } from '@/utils/planOperation'
-  import { productionPlanApi, planPartApi, planOperationApi } from '@/api/productionPlan'
+  import {
+    productionPlanApi,
+    planPartApi,
+    planOperationApi,
+    planMemberApi,
+  } from '@/api/productionPlan'
   import {
     memberTypes,
     type ProductionPlan,
@@ -147,9 +168,35 @@
   const props = defineProps<{ plan: ProductionPlan; revision: number }>()
   const emit = defineEmits<{ edit: [editor: PlanEditor] }>()
   const detail = ref<ProductionPlan>(props.plan)
+  const memberGroups = computed(() =>
+    memberTypes.map((label, index) => ({
+      type: index + 1,
+      label,
+      members: (detail.value.members ?? []).filter((member) => member.memberType === index + 1),
+    }))
+  )
   const loading = ref(false)
   const failed = ref(false)
   const saving = reactive(new Set<string>())
+  async function deleteMember(member: PlanMember) {
+    const key = `member-${member.id}`
+    if (saving.has(key)) return
+    saving.add(key)
+    try {
+      await ElMessageBox.confirm(
+        `确定将“${member.userName}”从本计划的${memberTypes[member.memberType - 1] ?? '计划人员'}中删除吗？`,
+        '删除计划人员',
+        { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+      )
+      await planMemberApi.remove(member.id)
+      detail.value.members = (detail.value.members ?? []).filter((item) => item.id !== member.id)
+      ElMessage.success('计划人员已删除')
+    } catch {
+      // Cancellation and failed requests leave the list intact.
+    } finally {
+      saving.delete(key)
+    }
+  }
   const quantityDrafts = reactive<Record<number, number | undefined>>({})
   const targetDrafts = reactive<Record<number, number | undefined>>({})
   const operationTarget = (operation: PlanOperation) =>

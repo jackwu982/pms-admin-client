@@ -64,6 +64,7 @@ declare module 'vue' {
     IconWelcome: typeof import('./src/components/icons/IconWelcome.vue')['default']
     MaintenanceBoard: typeof import('./src/components/productionBoard/MaintenanceBoard.vue')['default']
     PlanItemDialog: typeof import('./src/components/productionPlan/PlanItemDialog.vue')['default']
+    PlanMembersDialog: typeof import('./src/components/productionPlan/PlanMembersDialog.vue')['default']
     PlanProgressBoard: typeof import('./src/components/productionBoard/PlanProgressBoard.vue')['default']
     PlanResourceSelect: typeof import('./src/components/productionPlan/PlanResourceSelect.vue')['default']
     ProcessDialog: typeof import('./src/components/task/ProcessDialog.vue')['default']

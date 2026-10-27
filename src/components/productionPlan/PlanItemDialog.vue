@@ -16,7 +16,7 @@
           <dt>所属部件</dt>
           <dd>{{ editor.part.partName }}</dd>
         </div>
-        <div v-if="editor.kind !== 'member'">
+        <div>
           <dt>{{ label }}名称</dt>
           <dd>{{ part?.partName ?? op?.processName }}</dd>
         </div>
@@ -56,28 +56,15 @@
             <el-input-number v-model="form.totalHours" :min="0" :max="99999999.99" :precision="2" />
           </el-form-item>
         </template>
-        <template v-if="editor.kind !== 'part'">
-          <el-form-item
-            :label="editor.kind === 'member' ? '计划人员' : '工序负责人（可选）'"
-            prop="userId">
-            <PlanResourceSelect
-              :model-value="form.userId"
-              :selected-label="form.userName"
-              :fetch="fetchUsers"
-              placeholder="搜索人员"
-              @select="selectUser" />
-          </el-form-item>
-          <el-form-item v-if="editor.kind === 'member'" label="人员类型">
-            <el-select v-model="form.memberType">
-              <el-option
-                v-for="(name, index) in memberTypes"
-                :key="index"
-                :label="name"
-                :value="index + 1" />
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item v-if="editor.kind !== 'member'" label="纳入生产">
+        <el-form-item v-if="editor.kind === 'operation'" label="工序负责人（可选）">
+          <PlanResourceSelect
+            :model-value="form.userId"
+            :selected-label="form.userName"
+            :fetch="fetchUsers"
+            placeholder="搜索人员"
+            @select="selectUser" />
+        </el-form-item>
+        <el-form-item label="纳入生产">
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" />
         </el-form-item>
         <el-form-item label="备注">
@@ -99,27 +86,25 @@
 <script setup lang="ts">
   import { reactive, ref } from 'vue'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-  import { planPartApi, planOperationApi, planMemberApi } from '@/api/productionPlan'
+  import { planPartApi, planOperationApi } from '@/api/productionPlan'
   import { userApi } from '@/api/user'
-  import { memberTypes, type PlanEditor } from '@/types/productionPlanType'
+  import { type PlanEditor } from '@/types/productionPlanType'
   import { planOperationTarget } from '@/utils/planOperation'
   import PlanResourceSelect, { type ResourceOption } from './PlanResourceSelect.vue'
-  const props = defineProps<{ editor: PlanEditor }>()
+  const props = defineProps<{ editor: Exclude<PlanEditor, { kind: 'member' }> }>()
   const emit = defineEmits<{ closed: []; saved: [] }>()
   const e = props.editor
-  const label = { part: '部件', operation: '工序', member: '人员' }[e.kind]
+  const label = { part: '部件', operation: '工序' }[e.kind]
   const part = e.kind === 'part' ? e.record : undefined
   const op = e.kind === 'operation' ? e.record : undefined
-  const member = e.kind === 'member' ? e.record : undefined
   const standardFlag = op?.standardFlag ?? 0
   const form = reactive({
     quantity: part?.quantity ?? 1,
     totalQuantity: op?.totalQuantity ?? undefined,
     totalHours: op?.totalHours ?? undefined,
     enabled: part?.enabled ?? op?.enabled ?? 1,
-    userId: member?.userId ?? op?.ownerId ?? undefined,
-    userName: member?.userName ?? op?.ownerName ?? '',
-    memberType: member?.memberType ?? 1,
+    userId: op?.ownerId ?? undefined,
+    userName: op?.ownerName ?? '',
     remark: e.record?.remark ?? '',
   })
   const formRef = ref<FormInstance>()
@@ -128,7 +113,6 @@
     quantity: [
       { required: true, type: 'number', min: 1, message: '请输入计划数量', trigger: 'change' },
     ],
-    userId: [{ required: e.kind === 'member', message: '请选择人员', trigger: 'change' }],
     target: [
       {
         validator: (_r, _v, cb) => {
@@ -184,15 +168,6 @@
           sourceProcessId: e.record?.sourceProcessId,
         }
         await planOperationApi.update({ ...payload, id: e.record.id })
-      } else if (form.userId != null) {
-        const payload = {
-          ...common,
-          userId: form.userId,
-          userName: form.userName,
-          memberType: form.memberType,
-        }
-        if (e.record) await planMemberApi.update({ ...payload, id: e.record.id })
-        else await planMemberApi.create(payload)
       }
       ElMessage.success('保存成功')
       emit('saved')
