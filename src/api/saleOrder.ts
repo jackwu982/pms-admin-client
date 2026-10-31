@@ -11,4 +11,5 @@ export const saleOrderApi = {
     api.post<unknown, HttpResponse<SaleOrder>>('/api/sale-orders', payload),
   update: (payload: SaleOrderPayload & { id: number }) =>
     api.put<unknown, HttpResponse<SaleOrder>>('/api/sale-orders', payload),
+  remove: (id: number) => api.delete(`/api/sale-orders/${id}`),
 }

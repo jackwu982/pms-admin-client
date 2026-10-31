@@ -7,4 +7,7 @@ export const planOperationReportApi = {
       '/api/plan-operation-reports/list',
       { params }
     ),
+  approve: (id: number) => api.put(`/api/plan-operation-reports/${id}/approve`),
+  reject: (id: number, rejectReason?: string) =>
+    api.put(`/api/plan-operation-reports/${id}/reject`, { rejectReason }),
 }

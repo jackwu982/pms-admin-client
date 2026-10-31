@@ -16,6 +16,9 @@ export interface PlanOperationReport {
   reportTime: string
   createTime?: string
   status: number
+  auditUserId?: number
+  auditTime?: string
+  rejectReason?: string
   remark?: string
 }
 

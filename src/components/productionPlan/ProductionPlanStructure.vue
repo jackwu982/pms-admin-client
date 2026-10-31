@@ -35,6 +35,12 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column label="计划开始日期" min-width="145">
+        <template #default="{ row }">{{ row.planStart || '未设置' }}</template>
+      </el-table-column>
+      <el-table-column label="计划结束日期" min-width="145">
+        <template #default="{ row }">{{ row.planEnd || '未设置' }}</template>
+      </el-table-column>
       <el-table-column label="纳入生产" width="100">
         <template #default="{ row }">
           <el-switch
@@ -117,7 +123,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="单件工时（分钟）" min-width="150">
+        <el-table-column label="标准工时（分钟）" min-width="150">
           <template #default="{ row }">
             {{ row.standardFlag === 1 ? (row.stdTime ?? '-') : '-' }}
           </template>

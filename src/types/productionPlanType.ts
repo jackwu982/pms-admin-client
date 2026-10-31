@@ -20,6 +20,8 @@ export interface PlanPart {
   sourcePartId?: number
   partName: string
   quantity: number
+  planStart?: string
+  planEnd?: string
   enabled: number
   remark?: string
   operations?: PlanOperation[]

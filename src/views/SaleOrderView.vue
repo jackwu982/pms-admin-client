@@ -2,7 +2,11 @@
   <BaseTableContainer>
     <template #header-left-content><span class="font-semibold">销售单管理</span></template>
     <template #header-right-content>
-      <el-button :icon="Plus" type="primary" :disabled="openingId != null" @click="openCreate">
+      <el-button
+        :icon="Plus"
+        type="primary"
+        :disabled="openingId != null || deletingId != null"
+        @click="openCreate">
         新增销售单
       </el-button>
     </template>
@@ -65,12 +69,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
             <el-button
               link
               type="primary"
-              :disabled="openingId != null"
+              :disabled="openingId != null || deletingId != null"
               @click="openOrder(row.id, true)">
               详情
             </el-button>
@@ -78,9 +82,17 @@
               link
               type="primary"
               :loading="openingId === row.id"
-              :disabled="openingId != null"
+              :disabled="openingId != null || deletingId != null"
               @click="openOrder(row.id, false)">
               编辑
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :loading="deletingId === row.id"
+              :disabled="openingId != null || deletingId != null"
+              @click="removeOrder(row as SaleOrder)">
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -104,6 +116,7 @@
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
   import { Plus } from '@element-plus/icons-vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'
   import BasePagination from '@/components/base/BasePagination.vue'
@@ -128,6 +141,7 @@
   const editingOrder = ref<SaleOrder>()
   const readonly = ref(false)
   const openingId = ref<number>()
+  const deletingId = ref<number>()
   let requestId = 0
   function statusTag(status: SaleOrderStatus) {
     if (status === 1) return 'primary'
@@ -176,7 +190,7 @@
     showDialog.value = true
   }
   async function openOrder(id: number, viewOnly: boolean) {
-    if (openingId.value != null) return
+    if (openingId.value != null || deletingId.value != null) return
     openingId.value = id
     try {
       const res = await saleOrderApi.get(id)
@@ -187,6 +201,29 @@
       // Keep the list available when the detail request fails.
     } finally {
       openingId.value = undefined
+    }
+  }
+  async function removeOrder(order: SaleOrder) {
+    if (deletingId.value != null || openingId.value != null) return
+    try {
+      await ElMessageBox.confirm(`确定删除销售单“${order.orderNo}”吗？`, '删除销售单', {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+      })
+    } catch {
+      return
+    }
+    deletingId.value = order.id
+    try {
+      await saleOrderApi.remove(order.id)
+      ElMessage.success('销售单已删除')
+      if (orders.value.length === 1 && params.pageNum > 1) params.pageNum -= 1
+      await load()
+    } catch {
+      // The shared API client displays request errors.
+    } finally {
+      deletingId.value = undefined
     }
   }
   function saved() {

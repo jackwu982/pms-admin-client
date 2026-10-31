@@ -8,12 +8,12 @@
       class="mb-3!" />
     <div class="today-grid">
       <section class="dashboard-panel">
-        <h3 class="mt-0 text-base font-semibold">今日各计划上报工时</h3>
+        <h3 class="mt-0 text-base font-semibold">今日各计划已通过工时</h3>
         <BoardChart
-          v-if="reports.length"
+          v-if="approvedReports.length"
           :option="charts.hours"
-          description="今日各生产计划标准折算工时与非标准实际工时" />
-        <el-empty v-else-if="!loading && !failed" description="今天暂无上报记录" />
+          description="今日已通过上报的标准折算工时与非标准实际工时" />
+        <el-empty v-else-if="!loading && !failed" description="今天暂无已通过的上报记录" />
       </section>
       <section class="dashboard-panel">
         <h3 class="mt-0 text-base font-semibold">今日上报记录</h3>
@@ -95,9 +95,10 @@
   import type { PlanOperationReport } from '@/types/planOperationReportType'
   import BoardChart from './BoardChart.vue'
   import { reportCharts } from '@/utils/boardCharts'
-  const charts = computed(() => reportCharts(reports.value))
   const reports = ref<PlanOperationReport[]>([]),
     reportDate = ref('')
+  const approvedReports = computed(() => reports.value.filter((report) => report.status === 1))
+  const charts = computed(() => reportCharts(approvedReports.value))
   const loading = ref(false),
     failed = ref(false),
     paused = ref(false),

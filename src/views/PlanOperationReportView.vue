@@ -36,6 +36,15 @@
               <el-descriptions-item label="备注" :span="2">
                 {{ row.remark || '无' }}
               </el-descriptions-item>
+              <el-descriptions-item v-if="row.auditTime" label="审核时间">
+                {{ dayjsFormat(row.auditTime) }}
+              </el-descriptions-item>
+              <el-descriptions-item v-if="row.auditUserId" label="审核人 ID">
+                {{ row.auditUserId }}
+              </el-descriptions-item>
+              <el-descriptions-item v-if="row.rejectReason" label="拒绝理由" :span="2">
+                {{ row.rejectReason }}
+              </el-descriptions-item>
             </el-descriptions>
           </template>
         </el-table-column>
@@ -67,11 +76,33 @@
           <template #default="{ row }">{{ row.standardFlag === 0 ? '-' : row.defectQty }}</template>
         </el-table-column>
         <el-table-column prop="workHours" label="工时（小时）" width="120" align="right" />
-        <el-table-column label="状态" width="100" fixed="right">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="reportStatuses.find((s) => s.value === row.status)?.type ?? 'info'">
               {{ reportStatuses.find((s) => s.value === row.status)?.label ?? '未知' }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核" width="130" fixed="right">
+          <template #default="{ row }">
+            <template v-if="row.status === 0">
+              <el-button
+                link
+                type="success"
+                :loading="reviewingId === row.id"
+                :disabled="reviewingId != null"
+                @click="review(row as PlanOperationReport, 'approve')">
+                通过
+              </el-button>
+              <el-button
+                link
+                type="danger"
+                :disabled="reviewingId != null"
+                @click="review(row as PlanOperationReport, 'reject')">
+                驳回
+              </el-button>
+            </template>
+            <span v-else class="text-gray-400">已审核</span>
           </template>
         </el-table-column>
       </el-table>
@@ -87,6 +118,7 @@
 
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { planOperationReportApi } from '@/api/planOperationReport'
   import { reportStatuses, type PlanOperationReport } from '@/types/planOperationReportType'
   import { useDayjs } from '@/util/dayjs'
@@ -103,6 +135,7 @@
   const total = ref(0)
   const loading = ref(false)
   const failed = ref(false)
+  const reviewingId = ref<number>()
   let request = 0
   async function load() {
     const current = ++request
@@ -138,6 +171,47 @@
   }
   function operationType(flag?: number) {
     return flag === 1 ? '标准工序' : flag === 0 ? '非标准工序' : '未知'
+  }
+  async function review(record: PlanOperationReport, action: 'approve' | 'reject') {
+    if (reviewingId.value != null || record.status !== 0) return
+    const label = action === 'approve' ? '通过' : '驳回'
+    let rejectReason: string | undefined
+    try {
+      if (action === 'reject') {
+        const result = await ElMessageBox.prompt(
+          `确定驳回上报记录“${record.id}”吗？拒绝理由可选填。`,
+          '驳回上报记录',
+          {
+            type: 'warning',
+            inputType: 'textarea',
+            inputPlaceholder: '拒绝理由（选填，最多255字）',
+            inputValidator: (value: string) => value.length <= 255 || '拒绝理由不能超过255字',
+            confirmButtonText: '驳回',
+            cancelButtonText: '取消',
+          }
+        )
+        rejectReason = result.value.trim() || undefined
+      } else {
+        await ElMessageBox.confirm(`确定通过上报记录“${record.id}”吗？`, '通过上报记录', {
+          type: 'warning',
+          confirmButtonText: '通过',
+          cancelButtonText: '取消',
+        })
+      }
+    } catch {
+      return
+    }
+    reviewingId.value = record.id
+    try {
+      if (action === 'reject') await planOperationReportApi.reject(record.id, rejectReason)
+      else await planOperationReportApi.approve(record.id)
+      ElMessage.success(`上报记录已${label}`)
+      await load()
+    } catch {
+      // The shared API client displays request errors.
+    } finally {
+      reviewingId.value = undefined
+    }
   }
   onMounted(load)
 </script>

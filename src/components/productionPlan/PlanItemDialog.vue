@@ -20,16 +20,6 @@
           <dt>{{ label }}名称</dt>
           <dd>{{ part?.partName ?? op?.processName }}</dd>
         </div>
-        <template v-if="editor.kind === 'operation'">
-          <div>
-            <dt>工序类型</dt>
-            <dd>{{ standardFlag === 1 ? '标准工序' : '非标准工序' }}</dd>
-          </div>
-          <div v-if="standardFlag === 1">
-            <dt>单件标准工时</dt>
-            <dd>{{ op?.stdTime == null ? '未设置' : `${op.stdTime} 分钟` }}</dd>
-          </div>
-        </template>
       </dl>
       <el-form
         ref="formRef"
@@ -44,16 +34,46 @@
             保存后，未填写计划总数量的标准工序将同步此数量，已填写的数量保持不变。
           </div>
         </el-form-item>
+        <div v-if="editor.kind === 'part'" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <el-form-item label="计划开始日期">
+            <el-date-picker
+              v-model="form.planStart"
+              :clearable="false"
+              value-format="YYYY-MM-DD"
+              class="w-full!" />
+          </el-form-item>
+          <el-form-item label="计划结束日期" prop="planEnd">
+            <el-date-picker
+              v-model="form.planEnd"
+              :clearable="false"
+              value-format="YYYY-MM-DD"
+              class="w-full!" />
+          </el-form-item>
+        </div>
         <template v-if="editor.kind === 'operation'">
-          <el-form-item v-if="standardFlag === 1" label="计划总数量" prop="target">
+          <el-form-item label="工序类型">
+            <el-radio-group v-model="form.standardFlag">
+              <el-radio :value="1">标准工序</el-radio>
+              <el-radio :value="0">非标准工序</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="form.standardFlag === 1" label="标准工时（分钟）" prop="stdTime">
+            <el-input-number
+              v-model="form.stdTime"
+              :min="0.01"
+              :max="99999999.99"
+              :precision="2"
+              placeholder="未设置" />
+          </el-form-item>
+          <el-form-item v-if="form.standardFlag === 1" label="标准工序总数量" prop="totalQuantity">
             <el-input-number
               v-model="form.totalQuantity"
               :min="1"
               :max="2147483647"
               :precision="0" />
           </el-form-item>
-          <el-form-item v-else label="计划总时长（小时）" prop="target">
-            <el-input-number v-model="form.totalHours" :min="0" :max="99999999.99" :precision="2" />
+          <el-form-item v-else label="非标准工序总时长（小时）" prop="totalHours">
+            <el-input-number v-model="form.totalHours" :min="0.01" :max="99999999.99" :precision="2" />
           </el-form-item>
         </template>
         <el-form-item v-if="editor.kind === 'operation'" label="工序负责人（可选）">
@@ -97,9 +117,12 @@
   const label = { part: '部件', operation: '工序' }[e.kind]
   const part = e.kind === 'part' ? e.record : undefined
   const op = e.kind === 'operation' ? e.record : undefined
-  const standardFlag = op?.standardFlag ?? 0
   const form = reactive({
     quantity: part?.quantity ?? 1,
+    planStart: part?.planStart ?? undefined,
+    planEnd: part?.planEnd ?? undefined,
+    standardFlag: op?.standardFlag ?? 0,
+    stdTime: op?.stdTime ?? undefined,
     totalQuantity: op?.totalQuantity ?? undefined,
     totalHours: op?.totalHours ?? undefined,
     enabled: part?.enabled ?? op?.enabled ?? 1,
@@ -113,16 +136,47 @@
     quantity: [
       { required: true, type: 'number', min: 1, message: '请输入计划数量', trigger: 'change' },
     ],
-    target: [
+    planEnd: [
+      {
+        validator: (_r, _v, cb) =>
+          form.planStart && form.planEnd && form.planEnd < form.planStart
+            ? cb(new Error('结束日期不能早于开始日期'))
+            : cb(),
+        trigger: 'change',
+      },
+    ],
+    totalQuantity: [
       {
         validator: (_r, _v, cb) => {
           try {
-            planOperationTarget(standardFlag, form.totalQuantity, form.totalHours)
+            planOperationTarget(1, form.totalQuantity, form.totalHours)
             cb()
           } catch (error) {
             cb(error as Error)
           }
         },
+        trigger: 'change',
+      },
+    ],
+    totalHours: [
+      {
+        validator: (_r, _v, cb) => {
+          try {
+            planOperationTarget(0, form.totalQuantity, form.totalHours)
+            cb()
+          } catch (error) {
+            cb(error as Error)
+          }
+        },
+        trigger: 'change',
+      },
+    ],
+    stdTime: [
+      {
+        validator: (_r, value, cb) =>
+          value == null || (Number.isFinite(value) && value >= 0.01 && value <= 99999999.99)
+            ? cb()
+            : cb(new Error('标准工时须在 0.01 到 99999999.99 分钟之间')),
         trigger: 'change',
       },
     ],
@@ -153,6 +207,8 @@
         const payload = {
           ...common,
           quantity: form.quantity,
+          planStart: form.planStart,
+          planEnd: form.planEnd,
           enabled: form.enabled,
           sourcePartId: e.record?.sourcePartId,
         }
@@ -161,7 +217,9 @@
         const payload = {
           ...common,
           planPartId: e.part.id,
-          ...planOperationTarget(standardFlag, form.totalQuantity, form.totalHours),
+          standardFlag: form.standardFlag,
+          stdTime: form.standardFlag === 1 ? form.stdTime : undefined,
+          ...planOperationTarget(form.standardFlag, form.totalQuantity, form.totalHours),
           enabled: form.enabled,
           ownerId: form.userId,
           ownerName: form.userName,
