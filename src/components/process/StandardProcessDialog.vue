@@ -5,7 +5,13 @@
     width="520px"
     :close-on-click-modal="false"
     :before-close="handleClose">
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
       <el-form-item label="工序名称" prop="name">
         <el-input
           v-model="form.name"

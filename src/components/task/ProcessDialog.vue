@@ -6,7 +6,13 @@
     top="5vh"
     :close-on-click-modal="false"
     :before-close="handleClose">
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
       <el-form-item label="所属子任务" prop="subTaskId">
         <el-select v-model="form.subTaskId" placeholder="请选择子任务" class="w-full">
           <el-option

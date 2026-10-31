@@ -54,34 +54,33 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              @click="editor = { kind: 'product', record: row as Product }">
-              编辑
-            </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="editor = { kind: 'part', product: row as Product }">
-              新增部件
-            </el-button>
-            <el-button
-              link
-              type="primary"
-              :disabled="busy.has(row.id)"
-              @click="copyProduct(row as Product)">
-              复制
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :disabled="busy.has(row.id)"
-              @click="deleteProduct(row as Product)">
-              删除
-            </el-button>
+            <div class="table-row-actions">
+              <el-button
+                link
+                type="primary"
+                @click="editor = { kind: 'product', record: row as Product }">
+                编辑
+              </el-button>
+              <el-dropdown :disabled="busy.has(row.id)" trigger="click">
+                <el-button link type="primary">
+                  更多
+                  <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="editor = { kind: 'part', product: row as Product }">
+                      新增部件
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="copyProduct(row as Product)">复制</el-dropdown-item>
+                    <el-dropdown-item divided @click="deleteProduct(row as Product)">
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -98,7 +97,7 @@
 
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
-  import { Plus } from '@element-plus/icons-vue'
+  import { ArrowDown, Plus } from '@element-plus/icons-vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'

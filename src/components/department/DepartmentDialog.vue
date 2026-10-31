@@ -5,7 +5,13 @@
     width="480px"
     :close-on-click-modal="false"
     :before-close="handleClose">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="80px"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
       <el-form-item label="部门名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入部门名称" clearable />
       </el-form-item>

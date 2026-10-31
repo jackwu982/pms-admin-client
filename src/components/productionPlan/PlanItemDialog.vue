@@ -27,6 +27,8 @@
         :rules="rules"
         label-position="top"
         :disabled="saving"
+        scroll-to-error
+        :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }"
         class="plan-config-form">
         <el-form-item v-if="editor.kind === 'part'" label="计划数量" prop="quantity">
           <el-input-number v-model="form.quantity" :min="1" :max="2147483647" :precision="0" />
@@ -73,7 +75,11 @@
               :precision="0" />
           </el-form-item>
           <el-form-item v-else label="非标准工序总时长（小时）" prop="totalHours">
-            <el-input-number v-model="form.totalHours" :min="0.01" :max="99999999.99" :precision="2" />
+            <el-input-number
+              v-model="form.totalHours"
+              :min="0.01"
+              :max="99999999.99"
+              :precision="2" />
           </el-form-item>
         </template>
         <el-form-item v-if="editor.kind === 'operation'" label="工序负责人（可选）">
