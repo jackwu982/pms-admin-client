@@ -17,14 +17,18 @@ export const DATE_SHORTCUTS: { text: string; value: () => [string, string] }[] =
   {
     text: '本周',
     value: () => {
-      const monday = dayjs().day(1).startOf('day')
+      const monday = dayjs()
+        .subtract((dayjs().day() + 6) % 7, 'day')
+        .startOf('day')
       return [fmt(monday), fmt(dayjs())]
     },
   },
   {
     text: '上周',
     value: () => {
-      const monday = dayjs().day(1).subtract(7, 'day')
+      const monday = dayjs()
+        .subtract(((dayjs().day() + 6) % 7) + 7, 'day')
+        .startOf('day')
       const sunday = monday.add(6, 'day')
       return [fmt(monday), fmt(sunday)]
     },

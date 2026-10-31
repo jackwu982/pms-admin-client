@@ -12,6 +12,23 @@ const router = createRouter({
       redirect: '/homepage',
       children: [
         {
+          path: 'production-report',
+          name: 'production-report',
+          component: () => import('@/views/ProductionReportView.vue'),
+        },
+        { path: 'capacity', name: 'capacity', component: () => import('@/views/CapacityView.vue') },
+        {
+          path: 'repair-order',
+          name: 'repair-order',
+          component: () => import('@/views/RepairOrderView.vue'),
+        },
+        {
+          path: 'equipment',
+          name: 'equipment',
+          component: () => import('@/views/EquipmentView.vue'),
+        },
+        { path: 'feedback', name: 'feedback', component: () => import('@/views/FeedbackView.vue') },
+        {
           path: 'homepage',
           name: 'homepage',
           component: () => import('@/views/HomeView.vue'),
@@ -20,6 +37,41 @@ const router = createRouter({
           path: 'department',
           name: 'department',
           component: () => import('@/views/DepartmentView.vue'),
+        },
+
+        {
+          path: 'production-board',
+          name: 'production-board',
+          component: () => import('@/views/ProductionBoardView.vue'),
+        },
+        {
+          path: 'production-plan',
+          name: 'production-plan',
+          component: () => import('@/views/ProductionPlanView.vue'),
+        },
+
+        {
+          path: 'production-plan/:id',
+          name: 'production-plan-manage',
+          component: () => import('@/views/ProductionPlanManageView.vue'),
+          meta: { activeMenu: 'production-plan' },
+        },
+        {
+          path: 'plan-operation-report',
+          name: 'plan-operation-report',
+          component: () => import('@/views/PlanOperationReportView.vue'),
+        },
+
+        {
+          path: 'sale-order',
+          name: 'sale-order',
+          component: () => import('@/views/SaleOrderView.vue'),
+        },
+
+        {
+          path: 'product',
+          name: 'product',
+          component: () => import('@/views/ProductView.vue'),
         },
 
         {

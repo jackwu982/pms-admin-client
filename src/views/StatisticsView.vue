@@ -1,388 +1,217 @@
 <template>
-  <div>
-    <BaseTableContainer>
-      <template #filter-content>
-        <div class="flex items-end gap-4">
-          <div>
-            <span class="mb-1.5 block text-xs text-gray-400">日期范围</span>
-            <el-date-picker
-              v-model="dateRange"
-              type="daterange"
-              value-format="YYYY-MM-DD"
-              :shortcuts="DATE_SHORTCUTS"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
-              class="w-60!"
-              @change="onDateChange" />
+  <BaseTableContainer>
+    <template #header-left-content><h2 class="text-lg font-semibold">工时统计</h2></template>
+    <template #header-right-content>
+      <el-button :loading="exporting" @click="exportStatistics">
+        {{ exporting ? exportProgress : '导出员工、任务、部门统计' }}
+      </el-button>
+    </template>
+    <template #filter-content>
+      <BaseSearchForm @search="load" @reset="reset">
+        <el-form-item label="日期范围">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            :shortcuts="DATE_SHORTCUTS"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期" />
+        </el-form-item>
+      </BaseSearchForm>
+      <p class="mt-1 text-xs leading-6 text-gray-500">
+        按上报日期统计已通过记录，工时沿用上报时保存的数值。任务对应生产计划，部门按员工当前所属部门归集。
+      </p>
+    </template>
+    <template #content>
+      <div v-loading="loading">
+        <el-alert
+          v-if="failed"
+          title="统计加载失败，请重新查询"
+          type="error"
+          :closable="false"
+          class="mb-4!" />
+        <div class="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div v-for="card in cards" :key="card.label" class="rounded-xl bg-gray-50 p-5">
+            <div class="text-sm text-gray-500">{{ card.label }}</div>
+            <div class="mt-2 text-2xl font-semibold">{{ failed ? '—' : card.value }}</div>
           </div>
         </div>
-      </template>
-
-      <template #content>
-        <el-empty
-          v-if="!loading && timeEntries.length === 0"
-          description="该时间范围内暂无工时上报记录" />
-
-        <template v-else>
-          <!-- Summary cards -->
-          <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <el-card shadow="never">
-              <div class="mb-1 text-xs text-gray-500">总工时</div>
-              <div class="text-2xl font-bold text-(--el-color-primary)">
-                {{ totalHours.toFixed(3) }}h
+        <el-tabs v-model="dimension" @tab-change="page = 1">
+          <el-tab-pane label="按员工" name="employee" />
+          <el-tab-pane label="按任务" name="task" />
+          <el-tab-pane label="按部门" name="department" />
+        </el-tabs>
+        <el-table
+          :key="dimension"
+          :data="visibleGroups"
+          row-key="id"
+          empty-text="该时间范围内暂无工时上报记录">
+          <el-table-column type="expand">
+            <template #default="{ row }">
+              <div class="px-6 py-3">
+                <el-table :data="row.details" size="small" border>
+                  <el-table-column
+                    v-if="dimension === 'department'"
+                    prop="employeeName"
+                    label="员工"
+                    min-width="120" />
+                  <el-table-column
+                    v-if="dimension !== 'task'"
+                    prop="planNo"
+                    label="任务（生产计划）"
+                    min-width="160" />
+                  <el-table-column prop="productName" label="产品" min-width="160" />
+                  <el-table-column prop="partName" label="部件" min-width="150" />
+                  <el-table-column prop="processName" label="工序" min-width="150" />
+                  <el-table-column prop="reportCount" label="上报次数" width="100" align="right" />
+                  <el-table-column label="工时（小时）" width="140" align="right">
+                    <template #default="{ row: detail }">{{ formatHours(detail.hours) }}</template>
+                  </el-table-column>
+                </el-table>
               </div>
-            </el-card>
-            <el-card shadow="never">
-              <div class="mb-1 text-xs text-gray-500">参与人数</div>
-              <div class="text-2xl font-bold">{{ uniqueEmployees.length }}</div>
-            </el-card>
-            <el-card shadow="never">
-              <div class="mb-1 text-xs text-gray-500">涉及任务</div>
-              <div class="text-2xl font-bold">{{ uniqueTasks.length }}</div>
-            </el-card>
-          </div>
-
-          <!-- Tabs -->
-          <el-tabs v-model="activeTab">
-            <el-tab-pane label="交叉统计" name="cross">
-              <el-table
-                :data="crossTableData"
-                :span-method="crossSpanMethod"
-                :row-class-name="crossRowClass">
-                <el-table-column label="员工" min-width="120">
-                  <template #default="{ row }">{{ row.empName }}</template>
-                </el-table-column>
-                <el-table-column label="任务" min-width="160">
-                  <template #default="{ row }">{{ row.taskName }}</template>
-                </el-table-column>
-                <el-table-column label="工时" width="120" :align="'right'">
-                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
-                </el-table-column>
-              </el-table>
-            </el-tab-pane>
-
-            <el-tab-pane label="按部门" name="dept">
-              <el-table :data="departmentStats" row-key="id">
-                <el-table-column type="expand">
-                  <template #default="{ row }">
-                    <div class="px-6 py-2">
-                      <el-table :data="deptDetail[row.id] || []" size="small">
-                        <el-table-column prop="empName" label="员工" min-width="120" />
-                        <el-table-column prop="taskName" label="任务" min-width="140" />
-                        <el-table-column prop="processName" label="工序" min-width="140" />
-                        <el-table-column label="工时" width="100" :align="'right'">
-                          <template #default="{ row: e }">{{ e.hours.toFixed(3) }}h</template>
-                        </el-table-column>
-                      </el-table>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="部门" min-width="120" />
-                <el-table-column prop="empCount" label="人数" width="80" :align="'right'" />
-                <el-table-column label="总工时" width="120" :align="'right'">
-                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
-                </el-table-column>
-                <el-table-column label="占比" width="160" :align="'right'">
-                  <template #default="{ row }">
-                    <div class="flex items-center justify-end gap-2">
-                      <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
-                        <div
-                          class="h-full rounded-full bg-(--el-color-primary)"
-                          :style="{ width: row.percent + '%' }"></div>
-                      </div>
-                      <span class="w-10 text-right text-xs text-gray-500">{{ row.percent }}%</span>
-                    </div>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-tab-pane>
-
-            <el-tab-pane label="按员工" name="employee">
-              <el-table :data="employeeStats" row-key="id">
-                <el-table-column prop="name" label="员工" min-width="120" />
-                <el-table-column prop="deptName" label="部门" min-width="120" />
-                <el-table-column label="总工时" width="120" :align="'right'">
-                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
-                </el-table-column>
-                <el-table-column label="占比" width="160" :align="'right'">
-                  <template #default="{ row }">
-                    <div class="flex items-center justify-end gap-2">
-                      <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
-                        <div
-                          class="h-full rounded-full bg-(--el-color-primary)"
-                          :style="{ width: row.percent + '%' }"></div>
-                      </div>
-                      <span class="w-10 text-right text-xs text-gray-500">{{ row.percent }}%</span>
-                    </div>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-tab-pane>
-
-            <el-tab-pane label="按任务" name="task">
-              <el-table :data="taskStats" row-key="id">
-                <el-table-column type="expand">
-                  <template #default="{ row }">
-                    <div class="px-6 py-2">
-                      <el-table :data="taskDetail[row.id] || []" size="small">
-                        <el-table-column prop="name" label="工序" min-width="160" />
-                        <el-table-column label="实际工时" width="120" :align="'right'">
-                          <template #default="{ row: p }">{{ p.actualHours.toFixed(3) }}h</template>
-                        </el-table-column>
-                      </el-table>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" label="任务" min-width="160" />
-                <el-table-column label="实际工时" width="120" :align="'right'">
-                  <template #default="{ row }">{{ row.hours.toFixed(3) }}h</template>
-                </el-table-column>
-              </el-table>
-            </el-tab-pane>
-          </el-tabs>
-        </template>
-      </template>
-    </BaseTableContainer>
-  </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" :label="dimensionLabel" min-width="180" />
+          <el-table-column
+            v-if="dimension === 'employee'"
+            prop="departmentName"
+            label="部门"
+            min-width="140" />
+          <el-table-column v-else prop="employeeCount" label="参与人数" width="100" align="right" />
+          <el-table-column
+            v-if="dimension !== 'task'"
+            prop="taskCount"
+            label="涉及任务"
+            width="100"
+            align="right" />
+          <el-table-column prop="reportCount" label="上报次数" width="100" align="right" />
+          <el-table-column label="总工时（小时）" width="160" align="right">
+            <template #default="{ row }">{{ formatHours(row.hours) }}</template>
+          </el-table-column>
+          <el-table-column label="工时占比" width="200">
+            <template #default="{ row }">
+              <el-progress :percentage="row.percent" :stroke-width="6" />
+            </template>
+          </el-table-column>
+        </el-table>
+        <BasePagination
+          :total="groups.length"
+          v-model:page-num="page"
+          v-model:page-size="pageSize"
+          @size-change="page = 1" />
+      </div>
+    </template>
+  </BaseTableContainer>
 </template>
-
 <script setup lang="ts">
-  import { computed, onMounted, ref } from 'vue'
-
-  import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
-
-  import { timeEntryApi } from '@/api/timeEntry'
-  import type { TimeEntry } from '@/types/timeEntryType'
-
+  import { computed, onMounted, onUnmounted, ref } from 'vue'
+  import { ElMessage } from 'element-plus'
+  import { workHourStatisticsApi } from '@/api/workHourStatistics'
+  import type { WorkHourRow, WorkHourDimension } from '@/types/workHourStatistics'
+  import { groupWorkHours, summarizeWorkHours } from '@/utils/workHourStatistics'
   import { DATE_SHORTCUTS } from '@/util/dateShortcuts'
-
-  const timeEntries = ref<TimeEntry[]>([])
-  const loading = ref(false)
-
-  const dateRange = ref<[string, string] | null>(null)
-  const activeTab = ref('cross')
-
-  async function fetchEntries() {
-    loading.value = true
-    const params: Record<string, any> = {}
-    if (dateRange.value?.[0]) params.startDate = dateRange.value[0]
-    if (dateRange.value?.[1]) params.endDate = dateRange.value[1]
-
+  const exporting = ref(false)
+  const exportProgress = ref('准备导出')
+  let disposed = false
+  onUnmounted(() => {
+    disposed = true
+  })
+  async function exportStatistics() {
+    if (exporting.value) return
+    const startDate = dateRange.value?.[0]
+    const endDate = dateRange.value?.[1]
+    if (startDate && endDate && startDate > endDate) {
+      ElMessage.warning('开始日期不能晚于结束日期')
+      return
+    }
+    exporting.value = true
+    exportProgress.value = '正在读取数据'
     try {
-      const res: any = await timeEntryApi.listAll(params)
-      timeEntries.value = res.data ?? []
-    } finally {
-      loading.value = false
-    }
-  }
-
-  function onDateChange() {
-    fetchEntries()
-  }
-
-  onMounted(() => {
-    const thisWeek = DATE_SHORTCUTS.find((s) => s.text === '本周')
-    dateRange.value = thisWeek ? thisWeek.value() : null
-    fetchEntries()
-  })
-
-  const totalHours = computed(() => timeEntries.value.reduce((s, e) => s + (e.hours || 0), 0))
-
-  const uniqueEmployees = computed(() => {
-    const map = new Map<
-      number,
-      { id: number; nickname: string; departmentId?: number; departmentName?: string }
-    >()
-    for (const e of timeEntries.value) {
-      if (!map.has(e.userId)) {
-        map.set(e.userId, {
-          id: e.userId,
-          nickname: e.nickname || `用户${e.userId}`,
-          departmentId: e.departmentId,
-          departmentName: e.departmentName,
-        })
-      }
-    }
-    return [...map.values()]
-  })
-
-  const uniqueTasks = computed(() => {
-    const map = new Map<number, { id: number; name: string }>()
-    for (const e of timeEntries.value) {
-      if (!map.has(e.taskId)) {
-        map.set(e.taskId, { id: e.taskId, name: e.taskName || `任务${e.taskId}` })
-      }
-    }
-    return [...map.values()]
-  })
-
-  const crossRows = computed(() => {
-    const map = new Map<number, Map<number, { taskId: number; taskName: string; hours: number }>>()
-    for (const e of timeEntries.value) {
-      if (!map.has(e.userId)) map.set(e.userId, new Map())
-      const taskMap = map.get(e.userId)!
-      if (!taskMap.has(e.taskId)) {
-        taskMap.set(e.taskId, { taskId: e.taskId, taskName: e.taskName || '未知', hours: 0 })
-      }
-      taskMap.get(e.taskId)!.hours += e.hours || 0
-    }
-    const result: Record<number, { taskId: number; taskName: string; hours: number }[]> = {}
-    for (const [uid, taskMap] of map) {
-      result[uid] = [...taskMap.values()].sort((a, b) => b.hours - a.hours)
-    }
-    return result
-  })
-
-  const empTotals = computed(() => {
-    const totals: Record<number, number> = {}
-    for (const e of timeEntries.value) {
-      totals[e.userId] = (totals[e.userId] || 0) + (e.hours || 0)
-    }
-    return totals
-  })
-
-  const crossTableData = computed(() => {
-    const rows: {
-      empName: string
-      taskName: string
-      hours: number
-      isSubtotal: boolean
-      empRowSpan: number
-    }[] = []
-    for (const emp of uniqueEmployees.value) {
-      const empRows = crossRows.value[emp.id] || []
-      if (empRows.length === 0) continue
-      const rowSpan = empRows.length + 1
-      empRows.forEach((r, i) => {
-        rows.push({
-          empName: emp.nickname,
-          taskName: r.taskName,
-          hours: r.hours,
-          isSubtotal: false,
-          empRowSpan: i === 0 ? rowSpan : 0,
-        })
-      })
-      rows.push({
-        empName: emp.nickname,
-        taskName: '小计',
-        hours: empTotals.value[emp.id] || 0,
-        isSubtotal: true,
-        empRowSpan: 0,
-      })
-    }
-    return rows
-  })
-
-  const crossSpanMethod = ({ columnIndex, row }: any) => {
-    if (columnIndex === 0) {
-      if (row.empRowSpan > 0) return { rowspan: row.empRowSpan, colspan: 1 }
-      return { rowspan: 0, colspan: 0 }
-    }
-    return { rowspan: 1, colspan: 1 }
-  }
-
-  const crossRowClass = ({ row }: any) => (row.isSubtotal ? 'statistics-subtotal-row' : '')
-
-  const employeeStats = computed(() => {
-    return uniqueEmployees.value
-      .map((emp) => {
-        const hours = empTotals.value[emp.id] || 0
-        return {
-          id: emp.id,
-          name: emp.nickname,
-          deptName: emp.departmentName || '-',
-          hours,
-          percent: totalHours.value > 0 ? Math.round((hours / totalHours.value) * 100) : 0,
-        }
-      })
-      .sort((a, b) => b.hours - a.hours)
-  })
-
-  const departmentStats = computed(() => {
-    const map = new Map<number, { id: number; name: string; hours: number; emps: Set<number> }>()
-    for (const emp of uniqueEmployees.value) {
-      const deptId = emp.departmentId ?? 0
-      if (!map.has(deptId)) {
-        map.set(deptId, {
-          id: deptId,
-          name: emp.departmentName || '未知',
-          hours: 0,
-          emps: new Set(),
-        })
-      }
-      const d = map.get(deptId)!
-      d.hours += empTotals.value[emp.id] || 0
-      d.emps.add(emp.id)
-    }
-    return [...map.values()]
-      .map((d) => ({
-        id: d.id,
-        name: d.name,
-        hours: d.hours,
-        empCount: d.emps.size,
-        percent: totalHours.value > 0 ? Math.round((d.hours / totalHours.value) * 100) : 0,
-      }))
-      .sort((a, b) => b.hours - a.hours)
-  })
-
-  const deptDetail = computed(() => {
-    const result: Record<
-      number,
-      { empName: string; taskName: string; processName: string; hours: number }[]
-    > = {}
-    for (const dept of departmentStats.value) {
-      const emps = uniqueEmployees.value.filter((e) => (e.departmentId ?? 0) === dept.id)
-      const flat: { empName: string; taskName: string; processName: string; hours: number }[] = []
-      for (const emp of emps) {
-        for (const e of timeEntries.value) {
-          if (e.userId !== emp.id) continue
-          flat.push({
-            empName: emp.nickname,
-            taskName: e.taskName || '未知',
-            processName: e.processName || '未知',
-            hours: e.hours || 0,
+      const { fetchAllWorkHours, workHourWorkbook } = await import('@/utils/workHourExport')
+      const data = await fetchAllWorkHours(
+        async (pageNum, pageSize) => {
+          if (disposed) throw new Error('页面已关闭')
+          const res = await workHourStatisticsApi.listPage({
+            startDate,
+            endDate,
+            pageNum,
+            pageSize,
           })
+          return res.data
+        },
+        (loaded, total) => {
+          exportProgress.value = `已读取 ${loaded} / ${total}`
         }
+      )
+      if (disposed) return
+      if (!data.length) {
+        ElMessage.info('该日期范围内暂无可导出的数据')
+        return
       }
-      if (flat.length > 0) {
-        result[dept.id] = flat.sort((a, b) => b.hours - a.hours)
-      }
+      const XLSX = await import('xlsx')
+      if (disposed) return
+      XLSX.writeFile(
+        workHourWorkbook(data, startDate, endDate),
+        `工时统计_${startDate || '不限'}_${endDate || '不限'}.xlsx`
+      )
+      ElMessage.success('已导出三个维度的汇总和明细')
+    } catch {
+      if (!disposed) ElMessage.error('导出失败，请重试；未生成不完整文件')
+    } finally {
+      exporting.value = false
     }
-    return result
-  })
-
-  const taskStats = computed(() => {
-    const map = new Map<number, { id: number; name: string; hours: number }>()
-    for (const e of timeEntries.value) {
-      if (!map.has(e.taskId)) {
-        map.set(e.taskId, { id: e.taskId, name: e.taskName || `任务${e.taskId}`, hours: 0 })
-      }
-      map.get(e.taskId)!.hours += e.hours || 0
-    }
-    return [...map.values()].sort((a, b) => b.hours - a.hours)
-  })
-
-  const taskDetail = computed(() => {
-    const result: Record<number, { processId: number; name: string; actualHours: number }[]> = {}
-    for (const t of taskStats.value) {
-      const map = new Map<number, { processId: number; name: string; actualHours: number }>()
-      for (const e of timeEntries.value) {
-        if (e.taskId !== t.id) continue
-        const pid = e.processId ?? 0
-        if (!map.has(pid)) {
-          map.set(pid, { processId: pid, name: e.processName || '未知', actualHours: 0 })
-        }
-        map.get(pid)!.actualHours += e.hours || 0
-      }
-      result[t.id] = [...map.values()].sort((a, b) => b.actualHours - a.actualHours)
-    }
-    return result
-  })
-</script>
-
-<style lang="less" scoped>
-  :deep(.statistics-subtotal-row) {
-    font-weight: 600;
-    background: var(--el-fill-color-light);
   }
-</style>
+  const dateRange = ref<[string, string] | null>(
+    DATE_SHORTCUTS.find((s) => s.text === '本周')?.value() ?? null
+  )
+  const rows = ref<WorkHourRow[]>([]),
+    loading = ref(false),
+    failed = ref(false)
+  const dimension = ref<WorkHourDimension>('employee'),
+    page = ref(1),
+    pageSize = ref(10)
+  const summary = computed(() => summarizeWorkHours(rows.value))
+  const formatHours = (value: number) => Number(value).toFixed(3)
+  const cards = computed(() => [
+    { label: '总工时（小时）', value: formatHours(summary.value.hours) },
+    { label: '参与人数', value: summary.value.employees },
+    { label: '涉及任务', value: summary.value.tasks },
+    { label: '涉及部门', value: summary.value.departments },
+  ])
+  const groups = computed(() => groupWorkHours(rows.value, dimension.value))
+  const visibleGroups = computed(() =>
+    groups.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value)
+  )
+  const dimensionLabel = computed(
+    () => ({ employee: '员工', task: '任务（生产计划）', department: '部门' })[dimension.value]
+  )
+  let request = 0
+  async function load() {
+    if (dateRange.value && dateRange.value[0] > dateRange.value[1]) {
+      ElMessage.warning('开始日期不能晚于结束日期')
+      return
+    }
+    const current = ++request
+    loading.value = true
+    failed.value = false
+    rows.value = []
+    page.value = 1
+    try {
+      const res = await workHourStatisticsApi.list({
+        startDate: dateRange.value?.[0],
+        endDate: dateRange.value?.[1],
+      })
+      if (current === request) rows.value = res.data
+    } catch {
+      if (current === request) failed.value = true
+    } finally {
+      if (current === request) loading.value = false
+    }
+  }
+  function reset() {
+    dateRange.value = null
+    void load()
+  }
+  onMounted(load)
+</script>
+<style lang="less" scoped></style>
