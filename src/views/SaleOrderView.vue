@@ -69,31 +69,31 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="操作" width="210" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :disabled="openingId != null || deletingId != null"
-              @click="openOrder(row.id, true)">
-              详情
-            </el-button>
-            <el-button
-              link
-              type="primary"
-              :loading="openingId === row.id"
-              :disabled="openingId != null || deletingId != null"
-              @click="openOrder(row.id, false)">
-              编辑
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :loading="deletingId === row.id"
-              :disabled="openingId != null || deletingId != null"
-              @click="removeOrder(row as SaleOrder)">
-              删除
-            </el-button>
+            <div class="table-row-actions">
+              <el-button
+                link
+                type="primary"
+                :disabled="openingId != null || deletingId != null"
+                @click="openOrder(row.id, true)">
+                详情
+              </el-button>
+              <el-dropdown :disabled="openingId != null || deletingId != null" trigger="click">
+                <el-button link type="primary">
+                  更多
+                  <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="openOrder(row.id, false)">编辑</el-dropdown-item>
+                    <el-dropdown-item divided @click="removeOrder(row as SaleOrder)">
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -115,7 +115,7 @@
 
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
-  import { Plus } from '@element-plus/icons-vue'
+  import { ArrowDown, Plus } from '@element-plus/icons-vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import BaseTableContainer from '@/components/base/BaseTableContainer.vue'
   import BaseSearchForm from '@/components/base/BaseSearchForm.vue'

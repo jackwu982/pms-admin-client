@@ -11,7 +11,10 @@
       :model="form"
       :rules="rules"
       label-position="top"
-      :disabled="saving || readonly">
+      :disabled="saving || readonly"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
+      <div class="form-section-heading">基本信息</div>
       <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <el-form-item label="销售单号" prop="orderNo">
           <el-input v-model="form.orderNo" :maxlength="50" show-word-limit />
@@ -36,6 +39,7 @@
           </el-select>
         </el-form-item>
       </div>
+      <div class="form-section-heading">商品信息</div>
       <el-form-item v-if="!readonly" label="添加商品">
         <PlanResourceSelect
           :fetch="fetchProducts"
@@ -48,7 +52,7 @@
           <el-table-column prop="model" label="型号" min-width="120" />
           <el-table-column label="单位" width="110">
             <template #default="{ row }">
-              <el-input v-if="!readonly" v-model="row.unit" maxlength="20" />
+              <el-input v-if="!readonly" v-model="row.unit" maxlength="20" aria-label="商品单位" />
               <span v-else>{{ row.unit || '-' }}</span>
             </template>
           </el-table-column>
@@ -65,6 +69,7 @@
           </el-table-column>
         </el-table>
       </el-form-item>
+      <div class="form-section-heading">配置与备注</div>
       <div class="mb-2 flex items-center justify-between">
         <span class="text-sm font-medium">配置明细</span>
         <el-button

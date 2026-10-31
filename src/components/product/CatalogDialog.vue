@@ -5,7 +5,14 @@
     width="min(680px, 94vw)"
     :close-on-click-modal="false"
     :before-close="close">
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="saving">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      :disabled="saving"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
       <el-form-item v-if="editor.kind !== 'product'" label="所属产品">
         <el-input :model-value="editor.product.name" disabled />
       </el-form-item>

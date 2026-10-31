@@ -47,9 +47,11 @@
                     <template #default="{ row: subTask }">{{ subTask.processes.length }}</template>
                   </el-table-column>
                   <el-table-column label="负责人" min-width="140">
-                    <template #default="{ row: subTask }">{{
-                      (subTask.managers || []).map((m: Manager) => m.nickname).join('、') || '-'
-                    }}</template>
+                    <template #default="{ row: subTask }">
+                      {{
+                        (subTask.managers || []).map((m: Manager) => m.nickname).join('、') || '-'
+                      }}
+                    </template>
                   </el-table-column>
                   <el-table-column label="起止日期" min-width="220">
                     <template #default="{ row: subTask }">
@@ -124,30 +126,32 @@
               {{ (row.managers || []).map((m: any) => m.nickname).join('、') }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" width="260">
+          <el-table-column label="操作" fixed="right" width="150">
             <template #default="{ row }">
-              <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
-              <el-button
-                type="primary"
-                link
-                size="small"
-                :loading="copyingTaskId === row.id"
-                :disabled="copyingTaskId != null"
-                @click="copyTask(row as Task)"
-                >复制</el-button
-              >
-              <el-button
-                type="danger"
-                link
-                size="small"
-                :loading="deletingTaskId === row.id"
-                :disabled="deletingTaskId != null"
-                @click="deleteTask(row as Task)"
-                >删除</el-button
-              >
-              <el-button type="primary" link size="small" @click="openSubTaskDialog(row as Task)">
-                新增子任务
-              </el-button>
+              <div class="table-row-actions">
+                <el-button type="primary" link size="small" @click="openDialog(row)">
+                  编辑
+                </el-button>
+                <el-dropdown
+                  :disabled="copyingTaskId != null || deletingTaskId != null"
+                  trigger="click">
+                  <el-button type="primary" link size="small">
+                    更多
+                    <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item @click="copyTask(row as Task)">复制</el-dropdown-item>
+                      <el-dropdown-item @click="openSubTaskDialog(row as Task)">
+                        新增子任务
+                      </el-dropdown-item>
+                      <el-dropdown-item divided @click="deleteTask(row as Task)">
+                        删除
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -194,7 +198,7 @@
   import { taskApi } from '@/api/task'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import type { Manager, Process, SubTask, Task } from '@/types/taskType'
-  import { Plus } from '@element-plus/icons-vue'
+  import { ArrowDown, Plus } from '@element-plus/icons-vue'
   import { computed, onMounted, reactive, ref } from 'vue'
 
   interface SearchParams {

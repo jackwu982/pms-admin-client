@@ -11,9 +11,17 @@
       type="info"
       :closable="false"
       class="mb-4" />
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="saving">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      :disabled="saving"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
+      <div class="form-section-heading">计划信息</div>
       <el-form-item label="计划编号" prop="planNo">
-        <el-input v-model="form.planNo" maxlength="50" />
+        <el-input v-model="form.planNo" maxlength="50" placeholder="请输入唯一计划编号" />
       </el-form-item>
       <el-form-item label="关联销售单（可选）">
         <el-input
@@ -28,6 +36,7 @@
           placeholder="按销售单号搜索"
           @select="selectOrder" />
       </el-form-item>
+      <div class="form-section-heading">生产安排</div>
       <el-form-item label="计划产品" prop="products">
         <div class="w-full">
           <template v-if="!plan">

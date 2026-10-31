@@ -71,7 +71,14 @@
     width="580px"
     :close-on-click-modal="false"
     :before-close="close">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" :disabled="saving">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="120px"
+      :disabled="saving"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
       <el-form-item label="编号" prop="code">
         <el-input v-model="form.code" maxlength="64" />
       </el-form-item>

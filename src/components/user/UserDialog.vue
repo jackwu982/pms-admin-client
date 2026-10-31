@@ -5,7 +5,15 @@
     width="520px"
     :close-on-click-modal="false"
     :before-close="handleClose">
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      :disabled="saving"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
+      <div class="form-section-heading">员工信息</div>
       <el-form-item label="用户名" prop="username">
         <el-input v-model="form.username" placeholder="建议输入手机号" :disabled="!!form.id" />
       </el-form-item>
@@ -14,7 +22,8 @@
         <el-input v-model="form.nickname" placeholder="请输入真实姓名" />
       </el-form-item>
 
-      <el-form-item label="密码" prop="password">
+      <div class="form-section-heading">登录与权限</div>
+      <el-form-item :label="form.id ? '新密码（可选）' : '密码'" prop="password">
         <el-input
           v-model="form.password"
           type="password"
@@ -42,8 +51,12 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="saving" :disabled="departments.length === 0" @click="save">
+      <el-button :disabled="saving" @click="handleClose">取消</el-button>
+      <el-button
+        type="primary"
+        :loading="saving"
+        :disabled="departments.length === 0"
+        @click="save">
         保存
       </el-button>
     </template>
@@ -71,7 +84,7 @@
   const departments = ref<DepartmentOption[]>([])
 
   const handleClose = () => {
-    emits('closed')
+    if (!saving.value) emits('closed')
   }
 
   const formRef = ref<FormInstance>()
@@ -95,6 +108,17 @@
     username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
     nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
     departmentId: [{ required: true, message: '请选择部门', trigger: 'change' }],
+    password: [{ required: !props.user, message: '请输入密码', trigger: 'blur' }],
+    password2: [
+      { required: !props.user, message: '请再次输入密码', trigger: 'blur' },
+      {
+        validator: (_rule, value, callback) =>
+          form.password && value !== form.password
+            ? callback(new Error('两次密码不一致'))
+            : callback(),
+        trigger: 'blur',
+      },
+    ],
   }
 
   const departmentStore = useCacheDepartmentStore()
@@ -104,18 +128,9 @@
   }
 
   async function save() {
-    if (!formRef.value) return
+    if (saving.value || !formRef.value) return
     const valid = await formRef.value.validate().catch(() => false)
     if (!valid) return
-
-    if (!form.id && !form.password) {
-      ElMessage.warning('请输入密码')
-      return
-    }
-    if (form.password && form.password !== form.password2) {
-      ElMessage.warning('两次密码不一致')
-      return
-    }
 
     const payload: Record<string, any> = {
       username: form.username.trim(),

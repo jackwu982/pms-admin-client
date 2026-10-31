@@ -60,7 +60,7 @@
     v-if="visible"
     v-model="visible"
     :title="readonly ? '维修单详情' : form.id ? '编辑维修单' : '新增维修单'"
-    width="1100px"
+    width="min(1100px, 94vw)"
     :close-on-click-modal="false"
     :before-close="close">
     <template v-if="readonly">
@@ -83,9 +83,12 @@
       ref="formRef"
       :model="form"
       :rules="rules"
-      label-width="100px"
-      :disabled="saving">
-      <div class="grid grid-cols-2 gap-x-6">
+      label-position="top"
+      :disabled="saving"
+      scroll-to-error
+      :scroll-into-view-options="{ block: 'nearest', inline: 'nearest' }">
+      <div class="form-section-heading">维修基本信息</div>
+      <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <el-form-item label="维修单号" prop="orderNo">
           <el-input v-model="form.orderNo" maxlength="64" />
         </el-form-item>
@@ -103,8 +106,13 @@
             placeholder="填写设备、产品或其他维修对象" />
         </el-form-item>
         <el-form-item label="维修工时" prop="workHours">
-          <el-input-number v-model="form.workHours" :min="0.01" :max="99999999.99" :precision="2" />
-          <span class="ml-2">小时</span>
+          <el-input-number
+            v-model="form.workHours"
+            :min="0.01"
+            :max="99999999.99"
+            :precision="2"
+            class="w-full!" />
+          <span class="mt-1 text-xs text-gray-500">单位：小时</span>
         </el-form-item>
         <el-form-item label="维修人员" prop="repairUserId">
           <PlanResourceSelect
