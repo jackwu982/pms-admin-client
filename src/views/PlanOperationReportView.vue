@@ -26,64 +26,116 @@
     </template>
     <template #content>
       <el-button v-if="failed" link type="primary" @click="load">记录加载失败，点击重试</el-button>
-      <el-table v-loading="loading" :data="records" row-key="id" empty-text="暂无上报记录">
-        <el-table-column type="expand">
+      <el-table
+        v-loading="loading"
+        :data="records"
+        row-key="id"
+        empty-text="暂无上报记录"
+        class="report-table"
+        :row-class-name="
+          ({ row }: { row: PlanOperationReport }) => (row.status === 0 ? 'pending-report' : '')
+        ">
+        <el-table-column label="上报人 / 时间" width="170">
           <template #default="{ row }">
-            <el-descriptions :column="2" border class="m-4">
-              <el-descriptions-item label="工序类型">
-                {{ operationType(row.standardFlag) }}
-              </el-descriptions-item>
-              <el-descriptions-item label="备注" :span="2">
-                {{ row.remark || '无' }}
-              </el-descriptions-item>
-              <el-descriptions-item v-if="row.auditTime" label="审核时间">
-                {{ dayjsFormat(row.auditTime) }}
-              </el-descriptions-item>
-              <el-descriptions-item v-if="row.auditUserId" label="审核人 ID">
-                {{ row.auditUserId }}
-              </el-descriptions-item>
-              <el-descriptions-item v-if="row.rejectReason" label="拒绝理由" :span="2">
-                {{ row.rejectReason }}
-              </el-descriptions-item>
-            </el-descriptions>
+            <div class="cell-primary">{{ row.reporterName || '未记录姓名' }}</div>
+            <div class="cell-secondary tabular">
+              {{ dayjsFormat(row.reportTime) || '-' }}
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="reporterName" label="上报人" min-width="100" />
-        <el-table-column label="上报时间" min-width="170">
-          <template #default="{ row }">{{ dayjsFormat(row.reportTime) || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="生产计划" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.planNo || `计划 #${row.planId}` }}</template>
-        </el-table-column>
-        <el-table-column prop="productName" label="产品" min-width="140" show-overflow-tooltip />
-        <el-table-column label="部件" min-width="130" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.partName || `部件 #${row.planPartId}` }}</template>
-        </el-table-column>
-        <el-table-column label="工序" min-width="130" show-overflow-tooltip>
+        <el-table-column label="产品 / 生产计划" min-width="180">
           <template #default="{ row }">
-            {{ row.processName || `工序 #${row.planProcessId}` }}
+            <div class="cell-primary wrap-text">{{ row.productName || '未记录产品' }}</div>
+            <div class="cell-secondary wrap-text">计划 · {{ row.planNo || `#${row.planId}` }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="完成数量" width="100" align="right">
-          <template #default="{ row }">{{ row.standardFlag === 0 ? '-' : row.reportQty }}</template>
-        </el-table-column>
-        <el-table-column label="合格数量" width="100" align="right">
+        <el-table-column label="工序 / 部件" min-width="155">
           <template #default="{ row }">
-            {{ row.standardFlag === 0 ? '-' : row.qualifiedQty }}
+            <div class="cell-primary wrap-text">
+              {{ row.processName || `工序 #${row.planProcessId}` }}
+            </div>
+            <div class="cell-secondary wrap-text">
+              {{ row.partName || `部件 #${row.planPartId}` }}
+            </div>
+            <span class="process-type">{{ operationType(row.standardFlag) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="不良数量" width="100" align="right">
-          <template #default="{ row }">{{ row.standardFlag === 0 ? '-' : row.defectQty }}</template>
-        </el-table-column>
-        <el-table-column prop="workHours" label="工时（小时）" width="120" align="right" />
-        <el-table-column label="状态" width="100">
+        <el-table-column label="上报数量" width="150" align="right">
+          <template #header>
+            <div>上报数量</div>
+            <div class="quantity-grid quantity-labels">
+              <span>完成</span>
+              <span>合格</span>
+              <span>不良</span>
+            </div>
+          </template>
           <template #default="{ row }">
-            <el-tag :type="reportStatuses.find((s) => s.value === row.status)?.type ?? 'info'">
+            <div v-if="row.standardFlag !== 0" class="quantity-grid tabular">
+              <span>{{ row.reportQty ?? '-' }}</span>
+              <span>{{ row.qualifiedQty ?? '-' }}</span>
+              <span :class="{ 'defect-count': row.defectQty > 0 }">{{ row.defectQty ?? '-' }}</span>
+            </div>
+            <span v-else class="cell-secondary">不适用</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="工时" width="95" align="right">
+          <template #default="{ row }">
+            <div class="hours-value tabular">
+              {{ row.workHours }}
+              <span class="hours-unit">h</span>
+            </div>
+            <div class="cell-secondary">
+              {{
+                row.standardFlag === 1
+                  ? '折算工时'
+                  : row.standardFlag === 0
+                    ? '实际工时'
+                    : '上报工时'
+              }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="备注 / 驳回原因" min-width="220">
+          <template #default="{ row }">
+            <div v-if="row.remark" class="record-note">
+              <span class="cell-secondary">备注：</span>
+              {{ row.remark }}
+            </div>
+            <div v-if="row.status === 2 && row.rejectReason" class="record-rejection">
+              <span>驳回原因：</span>
+              {{ row.rejectReason }}
+            </div>
+            <span
+              v-if="!row.remark && !(row.status === 2 && row.rejectReason)"
+              class="cell-secondary">
+              —
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核信息" width="170">
+          <template #default="{ row }">
+            <template v-if="row.auditTime || row.auditUserId">
+              <div class="cell-primary tabular">
+                {{ dayjsFormat(row.auditTime) || '未记录时间' }}
+              </div>
+              <div v-if="row.auditUserId" class="cell-secondary wrap-text">
+                审核人 ID · {{ row.auditUserId }}
+              </div>
+            </template>
+            <span v-else class="cell-secondary">—</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100" fixed="right">
+          <template #default="{ row }">
+            <el-tag
+              size="small"
+              effect="light"
+              :type="reportStatuses.find((s) => s.value === row.status)?.type ?? 'info'">
               {{ reportStatuses.find((s) => s.value === row.status)?.label ?? '未知' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="审核" width="130" fixed="right">
+        <el-table-column label="审核操作" width="112" fixed="right">
           <template #default="{ row }">
             <template v-if="row.status === 0">
               <el-button
@@ -102,7 +154,7 @@
                 驳回
               </el-button>
             </template>
-            <span v-else class="text-gray-400">{{ row.status === 3 ? '已取消' : '已审核' }}</span>
+            <span v-else class="cell-secondary">{{ row.status === 3 ? '不可审核' : '—' }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -216,3 +268,85 @@
   }
   onMounted(load)
 </script>
+
+<style scoped>
+  .report-table {
+    --el-table-header-bg-color: #f5f7fb;
+    --el-table-row-hover-bg-color: #f6f9fe;
+  }
+  .report-table :deep(td.el-table__cell) {
+    padding: 13px 0;
+    vertical-align: middle;
+  }
+  .report-table :deep(.pending-report) {
+    --el-table-tr-bg-color: #fffdf7;
+  }
+  .cell-primary {
+    color: #25364d;
+    font-weight: 500;
+    line-height: 22px;
+  }
+  .cell-secondary {
+    margin-top: 3px;
+    color: #738094;
+    font-size: 12px;
+    line-height: 19px;
+  }
+  .wrap-text {
+    overflow-wrap: anywhere;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .process-type {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 0 5px;
+    background: #f0f3f7;
+    border-radius: 3px;
+    color: #738094;
+    font-size: 11px;
+    line-height: 18px;
+  }
+  .quantity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .quantity-labels {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #738094;
+  }
+  .defect-count {
+    color: #b45309;
+    font-weight: 600;
+  }
+  .hours-value {
+    color: #245d8b;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .hours-unit {
+    margin-left: 3px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #738094;
+  }
+  .record-note,
+  .record-rejection {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 21px;
+  }
+  .record-rejection {
+    color: #b4534a;
+  }
+  .record-note + .record-rejection {
+    margin-top: 6px;
+  }
+</style>
