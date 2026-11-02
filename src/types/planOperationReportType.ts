@@ -26,4 +26,5 @@ export const reportStatuses = [
   { value: 0, label: '待审核', type: 'warning' },
   { value: 1, label: '已通过', type: 'success' },
   { value: 2, label: '已驳回', type: 'danger' },
+  { value: 3, label: '已取消', type: 'info' },
 ] as const

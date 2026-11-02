@@ -43,8 +43,11 @@
                   <el-tag size="small" :type="row.standardFlag === 1 ? 'primary' : 'info'">
                     {{ row.standardFlag === 1 ? '标准' : '非标准' }}
                   </el-tag>
-                  <el-tag v-if="row.status !== 1" size="small" type="warning">
-                    {{ row.status === 2 ? '已驳回' : '待审核' }}
+                  <el-tag
+                    v-if="row.status !== 1"
+                    size="small"
+                    :type="row.status === 3 ? 'info' : row.status === 2 ? 'danger' : 'warning'">
+                    {{ row.status === 3 ? '已取消' : row.status === 2 ? '已驳回' : '待审核' }}
                   </el-tag>
                 </div>
                 <div

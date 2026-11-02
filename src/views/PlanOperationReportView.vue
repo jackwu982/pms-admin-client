@@ -102,7 +102,7 @@
                 驳回
               </el-button>
             </template>
-            <span v-else class="text-gray-400">已审核</span>
+            <span v-else class="text-gray-400">{{ row.status === 3 ? '已取消' : '已审核' }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -208,7 +208,8 @@
       ElMessage.success(`上报记录已${label}`)
       await load()
     } catch {
-      // The shared API client displays request errors.
+      // The shared API client displays request errors; reload concurrent cancellations.
+      await load()
     } finally {
       reviewingId.value = undefined
     }
