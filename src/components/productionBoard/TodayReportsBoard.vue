@@ -16,18 +16,18 @@
         <el-empty v-else-if="!loading && !failed" description="今天暂无已通过的上报记录" />
       </section>
       <section class="dashboard-panel">
-        <h3 class="mt-0 text-base font-semibold">今日上报记录</h3>
+        <h3 class="mt-0 text-base font-semibold">上报记录</h3>
         <div
           ref="viewport"
           v-loading="loading"
           class="report-scroll"
           tabindex="0"
-          aria-label="今日上报记录，聚焦暂停自动滚动"
+          aria-label="上报记录，聚焦暂停自动滚动"
           @mouseenter="hovered = true"
           @mouseleave="hovered = false"
           @focusin="focused = true"
           @focusout="focused = false">
-          <el-empty v-if="!loading && !failed && !reports.length" description="今天暂无上报记录" />
+          <el-empty v-if="!loading && !failed && !reports.length" description="暂无上报记录" />
           <div ref="track">
             <div
               v-for="copy in looping ? 2 : 1"
@@ -95,12 +95,14 @@
 <script setup lang="ts">
   import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { productionBoardApi } from '@/api/productionBoard'
+  import { planOperationReportApi } from '@/api/planOperationReport'
   import type { PlanOperationReport } from '@/types/planOperationReportType'
   import BoardChart from './BoardChart.vue'
   import { reportCharts } from '@/utils/boardCharts'
   const reports = ref<PlanOperationReport[]>([]),
-    reportDate = ref('')
-  const approvedReports = computed(() => reports.value.filter((report) => report.status === 1))
+    reportDate = ref(''),
+    todayReports = ref<PlanOperationReport[]>([])
+  const approvedReports = computed(() => todayReports.value.filter((report) => report.status === 1))
   const charts = computed(() => reportCharts(approvedReports.value))
   const loading = ref(false),
     failed = ref(false),
@@ -140,11 +142,15 @@
     const current = ++request
     loading.value = true
     try {
-      const res = await productionBoardApi.todayReports()
+      const [res, recentRes] = await Promise.all([
+        productionBoardApi.todayReports(),
+        planOperationReportApi.list({ pageNum: 1, pageSize: 50 }),
+      ])
       if (current !== request) return
       const changedDay = reportDate.value !== res.data.date
       reportDate.value = res.data.date
-      reports.value = res.data.list
+      todayReports.value = res.data.list
+      reports.value = recentRes.data.list
       failed.value = false
       await nextTick()
       if (changedDay && viewport.value) {
@@ -156,6 +162,7 @@
       if (current === request) {
         failed.value = true
         reports.value = []
+        todayReports.value = []
       }
     } finally {
       if (current === request) loading.value = false
@@ -191,7 +198,7 @@
     animation = requestAnimationFrame(scroll)
     refreshTimer = setInterval(() => {
       if (!loading.value && !document.hidden) void load()
-    }, 60000)
+    }, 60000 * 3)
   })
   onUnmounted(() => {
     request++

@@ -2,6 +2,9 @@
   <BaseTableContainer>
     <template #header-left-content><span class="font-semibold">上报记录</span></template>
     <template #header-right-content>
+      <el-button :loading="exporting" @click="exportReports">
+        {{ exporting ? exportProgress : '导出上报记录' }}
+      </el-button>
       <el-button :loading="loading" @click="load">刷新</el-button>
     </template>
     <template #filter-content>
@@ -11,6 +14,16 @@
         </el-form-item>
         <el-form-item label="上报人">
           <el-input v-model="params.reporterName" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="上报时间">
+          <el-date-picker
+            v-model="reportTimeRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            :shortcuts="DATE_SHORTCUTS"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            clearable />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="params.status" :empty-values="[null, undefined]" class="w-32!">
@@ -35,12 +48,17 @@
         :row-class-name="
           ({ row }: { row: PlanOperationReport }) => (row.status === 0 ? 'pending-report' : '')
         ">
-        <el-table-column label="上报人 / 时间" width="170">
+        <el-table-column label="上报人 / 日期" width="170">
           <template #default="{ row }">
             <div class="cell-primary">{{ row.reporterName || '未记录姓名' }}</div>
             <div class="cell-secondary tabular">
-              {{ dayjsFormat(row.reportTime) || '-' }}
+              {{ dayjsFormat(row.reportTime, 'YYYY-MM-DD') || '-' }}
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="提交创建时间" width="170">
+          <template #default="{ row }">
+            <span class="cell-secondary tabular">{{ dayjsFormat(row.createTime) || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="产品 / 生产计划" min-width="180">
@@ -169,10 +187,11 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { onMounted, onUnmounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { planOperationReportApi } from '@/api/planOperationReport'
   import { reportStatuses, type PlanOperationReport } from '@/types/planOperationReportType'
+  import { DATE_SHORTCUTS } from '@/util/dateShortcuts'
   import { useDayjs } from '@/util/dayjs'
 
   const { dayjsFormat } = useDayjs()
@@ -183,23 +202,71 @@
     reporterName: '',
     status: '' as number | '',
   })
+  const reportTimeRange = ref<[string, string] | null>(
+    DATE_SHORTCUTS.find((s) => s.text === '本周')?.value() ?? null
+  )
   const records = ref<PlanOperationReport[]>([])
   const total = ref(0)
   const loading = ref(false)
   const failed = ref(false)
   const reviewingId = ref<number>()
+  function reportFilters() {
+    return {
+      startDate: reportTimeRange.value?.[0],
+      endDate: reportTimeRange.value?.[1],
+      planNo: params.planNo.trim() || undefined,
+      reporterName: params.reporterName.trim() || undefined,
+      status: params.status === '' ? undefined : params.status,
+    }
+  }
+  const exporting = ref(false)
+  const exportProgress = ref('准备导出')
+  let disposed = false
+  onUnmounted(() => {
+    disposed = true
+  })
+  async function exportReports() {
+    if (exporting.value) return
+    const filters = reportFilters()
+    exporting.value = true
+    exportProgress.value = '正在读取数据'
+    try {
+      const { fetchAllReports, reportWorkbook } = await import('@/utils/planOperationReportExport')
+      const rows = await fetchAllReports(
+        async (pageNum, pageSize) => {
+          if (disposed) throw new Error('页面已关闭')
+          const res = await planOperationReportApi.list({ ...filters, pageNum, pageSize })
+          return res.data
+        },
+        (loaded, total) => {
+          exportProgress.value = `已读取 ${loaded} / ${total}`
+        }
+      )
+      if (disposed) return
+      if (!rows.length) {
+        ElMessage.info('当前筛选条件下暂无可导出的上报记录')
+        return
+      }
+      const XLSX = await import('xlsx')
+      if (disposed) return
+      XLSX.writeFile(
+        reportWorkbook(rows),
+        `上报记录_${filters.startDate || '不限'}_${filters.endDate || '不限'}.xlsx`
+      )
+      ElMessage.success(`已导出 ${rows.length} 条上报记录`)
+    } catch {
+      if (!disposed) ElMessage.error('导出失败，请重试；未生成不完整文件')
+    } finally {
+      exporting.value = false
+    }
+  }
   let request = 0
   async function load() {
     const current = ++request
     loading.value = true
     failed.value = false
     try {
-      const res = await planOperationReportApi.list({
-        ...params,
-        planNo: params.planNo.trim() || undefined,
-        reporterName: params.reporterName.trim() || undefined,
-        status: params.status === '' ? undefined : params.status,
-      })
+      const res = await planOperationReportApi.list({ ...params, ...reportFilters() })
       if (current !== request) return
       records.value = res.data.list ?? []
       total.value = res.data.total ?? 0
@@ -218,6 +285,7 @@
     void load()
   }
   function reset() {
+    reportTimeRange.value = null
     Object.assign(params, { planNo: '', reporterName: '', status: '' })
     search()
   }
